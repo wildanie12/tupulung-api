@@ -1,0 +1,2378 @@
+openapi: '3.0.3'
+
+info:
+    title: Event Planner
+    version: v1.0.0
+    description: Event management system API, written in Golang.
+
+servers:
+    - url: 'http://34.238.121.143:8000'
+      description: Production
+
+tags:
+    - name: Auth
+      description: Authentication system
+    - name: User
+      description: Manage user data
+    - name: Event
+      description: Do event operations
+    - name: Category
+      description: manage categories
+    - name: Comment
+      description: Post a comment onto an event
+
+components:
+    securitySchemes:
+        JWTAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+            description: 'Use token for authorization'
+
+    schemas:
+        auth-request:
+            type: object
+            properties:
+                email:
+                    type: string
+                    example: john@mail.com
+                password:
+                    type: string
+                    example: john123
+        user-request:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 7
+                name:
+                    type: string
+                    example: John
+                email:
+                    type: string
+                    example: john@mail.com
+                password:
+                    type: string
+                    example: john123
+                gender:
+                    type: string
+                    example: male
+                address:
+                    type: string
+                    example: Groove st. Ave, Dallas
+                avatar:
+                    type: string
+                    example: https://source.unsplash.com/1200x400/?sea
+        user-response:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 7
+                name:
+                    type: string
+                    example: John
+                email:
+                    type: string
+                    example: john@mail.com
+                gender:
+                    type: string
+                    example: male
+                address:
+                    type: string
+                    example: Groove st. Ave, Dallas
+                avatar:
+                    type: string
+                    example: https://source.unsplash.com/1200x400/?sea
+                created_at:
+                    type: string
+                    example: 2012/07/28T10:02:37.000+0700
+                updated_at:
+                    type: string
+                    example: 2012/07/28T10:02:37.000+0700
+        category-request:
+            type: object
+            properties:
+                title:
+                    type: string
+                    example: Some random category
+        category-response:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 7
+                title:
+                    type: string
+                    example: Some random category
+                created_at:
+                    type: string
+                    example: 2012/07/28T10:02:37.000+0700
+                updated_at:
+                    type: string
+                    example: 2012/07/28T10:02:37.000+0700
+        event-request:
+            type: object
+            properties:
+                title:
+                    type: string
+                    example: 'Event Title'
+                hosted_by:
+                    type: string
+                    example: 'Someone'
+                cover:
+                    type: string
+                    example: 'https://source.unsplash.com/1200x400/?festival'
+                datetime_event:
+                    type: string
+                    example: '2012-07-28T08:37:12:000+12:00'
+                category_id:
+                    type: integer
+                    example: 3
+                description:
+                    type: string
+                    example: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Enim, inventore deserunt! Ad optio esse libero. Debitis accusantium ut labore quaerat!
+        event-response:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 7
+                title:
+                    type: string
+                    example: 'Event title'
+                hosted_by:
+                    type: string
+                    example: 'Someone'
+                cover:
+                    type: string
+                    example: 'https://source.unsplash.com/1200x400/?festival'
+                datetime_event:
+                    type: string
+                    example: '2012-07-28T08:37:12:000+12:00'
+                description:
+                    type: string
+                    example: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Enim, inventore deserunt! Ad optio esse libero. Debitis accusantium ut labore quaerat!
+                user_id:
+                    type: integer
+                    example: 2
+                user:
+                    $ref: '#/components/schemas/user-response'
+                category_id:
+                    type: integer
+                    example: 3
+                category:
+                    $ref: '#/components/schemas/category-response'
+                created_at:
+                    type: string
+                    example: '2012-07-28T08:37:12:000+12:00'
+                updated_at:
+                    type: string
+                    example: '2012-07-28T08:37:12:000+12:00'
+        participant-request:
+            type: object
+            properties:
+                user_id:
+                    type: integer
+                    example: 3
+        participant-response:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 7
+                user_id:
+                    type: integer
+                    example: 3
+                created_at:
+                    type: string
+                    example: '2012-07-28T08:37:12:000+12:00'
+                updated_at:
+                    type: string
+                    example: '2012-07-28T08:37:12:000+12:00'
+        comment-request:
+            type: object
+            properties:
+                comment:
+                    type: string
+                    example: "That's a nice event, I want to be in it!"
+        comment-response:
+            type: object
+            properties:
+                event_id:
+                    type: integer
+                    example: 7
+                user_id:
+                    type: integer
+                    example: 11
+                user:
+                    $ref: '#/components/schemas/user-response'
+                comment:
+                    type: string
+                    example: "That's a nice event, I want to be in it!"
+                created_at:
+                    type: string
+                    example: '2012-07-28T08:37:12:000+12:00'
+                updated_at:
+                    type: string
+                    example: '2012-07-28T08:37:12:000+12:00'
+
+        pagination:
+            type: object
+            properties:
+                page:
+                    type: integer
+                    example: 1
+                limit:
+                    type: integer
+                    example: 50
+                total_pages:
+                    type: integer
+                    example: 11
+
+paths:
+    /api/auth:
+        post:
+            tags:
+                - 'Auth'
+            description: Log in the registered user into the system
+            summary: Login to the system
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/auth-request'
+            responses:
+                '200':
+                    description: success authenticating single user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'OK'
+                                    code:
+                                        type: string
+                                        example: 200
+                                    error:
+                                        type: string
+                                        example: null
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/auth'
+                                            me:
+                                                type: string
+                                                example: 'http://domain.com/api/auth/me'
+                                    data:
+                                        type: object
+                                        properties:
+                                            token:
+                                                type: string
+                                                example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+                                            user:
+                                                $ref: '#/components/schemas/user-response'
+                '400':
+                    description: validation failed
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 400
+                                    error:
+                                        type: string
+                                        example: 'validation error'
+                                    errors:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                field:
+                                                    type: string
+                                                    example: username
+                                                error:
+                                                    type: string
+                                                    example: required
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/auth'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: 'server error, cannot update database'
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/auth'
+
+    /api/auth/me:
+        get:
+            tags:
+                - 'Auth'
+            security:
+                - JWTAuth: []
+            description: Get currently authenticated userdata
+            summary: Get currently authenticated userdata
+            parameters:
+                - in: header
+                  name: Authorization
+                  required: true
+                  schema:
+                      type: string
+                      example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+            responses:
+                '200':
+                    description: success authenticating single user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'OK'
+                                    code:
+                                        type: string
+                                        example: 200
+                                    error:
+                                        type: string
+                                        example: null
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/auth/me'
+                                    data:
+                                        type: object
+                                        properties:
+                                            token:
+                                                type: string
+                                                example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+                                            user:
+                                                $ref: '#/components/schemas/user-response'
+                '400':
+                    description: token invalid
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 400
+                                    error:
+                                        type: string
+                                        example: 'invalid token'
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/auth'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: 'server error, cannot connect database'
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/auth'
+
+    # -----------------------------------------
+    #  User
+    # -----------------------------------------
+    /api/users:
+        post:
+            tags:
+                - 'User'
+            description: Register a user
+            summary: Register a user
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user-request'
+            responses:
+                '200':
+                    description: success creating single user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: integer
+                                        example: 201
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                                    data:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: integer
+                                                example: 1
+                '400':
+                    description: validation failed
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 400
+                                    error:
+                                        type: string
+                                        example: 'validation error'
+                                    errors:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                field:
+                                                    type: string
+                                                    example: username
+                                                error:
+                                                    type: string
+                                                    example: required
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/users'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: 'server error, cannot connect to database'
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/users'
+
+    /api/users/{userId}:
+        get:
+            tags:
+                - 'User'
+            description: Get single user data
+            summary: Get single user data
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  example:
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: success get single user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: string
+                                        example: 200
+                                    data:
+                                        $ref: '#/components/schemas/user-response'
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                '400':
+                    description: cannot get single user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: string
+                                        example: 200
+                                    error:
+                                        type: string
+                                        example: cannot get user data with specified id
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/users/2'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: 'server error, cannot connect to database'
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/users/2'
+        put:
+            tags:
+                - 'User'
+            security:
+                - JWTAuth: []
+            description: Update single user
+            summary: Update single user
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user-request'
+            responses:
+                '200':
+                    description: success creating single user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: integer
+                                        example: 200
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                                    data:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: integer
+                                                example: 1
+                '400':
+                    description: validation error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 422
+                                    error:
+                                        type: string
+                                        example: Field name must be filled
+                                    errors:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                field:
+                                                    type: string
+                                                    example: username
+                                                error:
+                                                    type: string
+                                                    example: username must be filled
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 401
+                                    error:
+                                        type: string
+                                        example: Unauthorized user
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: cannot udpate user record
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+        delete:
+            tags:
+                - 'User'
+            security:
+                - JWTAuth: []
+            description: Delete single user
+            summary: delete single user
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  example: 1
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: success deleting single user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: integer
+                                        example: 200
+                                    error:
+                                        type: string
+                                        example: null
+                                    data:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: string
+                                                example: 1
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                '400':
+                    description: specified parameter doesn't match with any record
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 400
+                                    error:
+                                        type: string
+                                        example: specified id doesn't match with any record
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 422
+                                    error:
+                                        type: string
+                                        example: Unauthorized user
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: cannot create user record
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+
+    # -----------------------------------------
+    #  Category
+    # -----------------------------------------
+
+    /api/categories:
+        get:
+            tags:
+                - 'Category'
+            description: Getting list of category
+            parameters:
+                - in: query
+                  name: limit
+                  description: Limit rows per page
+                  schema:
+                      type: string
+                      example: 50
+                - in: query
+                  name: page
+                  description: Page number
+                  schema:
+                      type: string
+                      example: 1
+            summary: getting list of category
+            responses:
+                '200':
+                    description: Success getting list of category
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    error:
+                                        type: string
+                                        example: null
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/categories'
+                                    data:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/category-response'
+                                    pagination:
+                                        $ref: '#/components/schemas/pagination'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: 'server error, cannot connect to database'
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/categories'
+
+        post:
+            tags:
+                - 'Category'
+            security:
+                - JWTAuth: []
+            description: Create single category
+            summary: Create single category
+            parameters:
+                - in: header
+                  name: Authorization
+                  required: true
+                  schema:
+                      type: string
+                      example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/category-request'
+            responses:
+                '200':
+                    description: success creating single category
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: integer
+                                        example: 201
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/categories/2'
+                                    data:
+                                        $ref: '#/components/schemas/category-response'
+                '400':
+                    description: validation failed
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 400
+                                    error:
+                                        type: string
+                                        example: 'validation error'
+                                    errors:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                field:
+                                                    type: string
+                                                    example: title
+                                                error:
+                                                    type: string
+                                                    example: title is required
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/auth'
+                '401':
+                    description: Unauthorized user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: integer
+                                        example: 401
+                                    error:
+                                        type: string
+                                        example: 'Unauthorized user'
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/1/products/2'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: 'server error, cannot connect to database'
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/categories'
+
+    /api/categories/{categoryId}:
+        put:
+            tags:
+                - 'Category'
+            description: Create single category
+            summary: Create single category
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  example: 1
+                  schema:
+                      type: string
+                - in: header
+                  name: Authorization
+                  required: true
+                  schema:
+                      type: string
+                      example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/category-request'
+            responses:
+                '200':
+                    description: success updating single category
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: integer
+                                        example: 200
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/categories/2'
+                                    data:
+                                        $ref: '#/components/schemas/category-response'
+                '400':
+                    description: validation error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 422
+                                    error:
+                                        type: string
+                                        example: Field title must be filled
+                                    errors:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                field:
+                                                    type: string
+                                                    example: title
+                                                error:
+                                                    type: string
+                                                    example: title must be filled
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/categories/2'
+                '401':
+                    description: Unauthorized user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: integer
+                                        example: 401
+                                    error:
+                                        type: string
+                                        example: 'Unauthorized user'
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/categories/2'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: cannot update category
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/categories/2'
+        delete:
+            tags:
+                - 'Category'
+            description: Delete single category
+            summary: delete single category
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  example: 1
+                  schema:
+                      type: string
+                - in: header
+                  name: Authorization
+                  required: true
+                  schema:
+                      type: string
+                      example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+            responses:
+                '200':
+                    description: success deleting single category
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: integer
+                                        example: 200
+                                    error:
+                                        type: string
+                                        example: null
+                                    data:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: string
+                                                example: 1
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/categories/2'
+                '400':
+                    description: specified parameter doesn't match with any record
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 400
+                                    error:
+                                        type: string
+                                        example: specified id doesn't match with any record
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/categories/2'
+                '401':
+                    description: Unauthorized user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: integer
+                                        example: 401
+                                    error:
+                                        type: string
+                                        example: 'Unauthorized user'
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/categories/2'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: cannot delete category
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/categories/2'
+
+    # -----------------------------------------
+    #  Events
+    # -----------------------------------------
+    /api/events:
+        get:
+            tags:
+                - 'Event'
+            description: Getting list of events
+            summary: getting list of events
+            parameters:
+                - in: query
+                  name: q
+                  allowEmptyValue: true
+                  description: Search by events title and description
+                  schema:
+                      type: string
+                      example: Some event's name to search
+                - in: query
+                  name: location
+                  description: Search events by location
+                  schema:
+                      type: string
+                      example: Surabaya
+                - in: query
+                  name: limit
+                  description: Limit rows per page
+                  schema:
+                      type: string
+                      example: 50
+                - in: query
+                  name: page
+                  description: Page number
+                  schema:
+                      type: string
+                      example: 1
+            responses:
+                '200':
+                    description: Success getting list of user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    error:
+                                        type: string
+                                        example: null
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events'
+                                            next:
+                                                type: string
+                                                example: 'http://example.com/api/events?p=2'
+                                            last:
+                                                type: string
+                                                example: 'http://example.com/api/events?p=10'
+                                    data:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/event-response'
+                                    pagination:
+                                        $ref: '#/components/schemas/pagination'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: 'server error, cannot connect to database'
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events'
+
+        post:
+            tags:
+                - 'Event'
+            security:
+                - JWTAuth: []
+            description: Create single event
+            summary: Create single event
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/event-request'
+            responses:
+                '200':
+                    description: success creating single user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: integer
+                                        example: 201
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                                    data:
+                                        $ref: '#/components/schemas/user-response'
+                '400':
+                    description: validation failed
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 400
+                                    error:
+                                        type: string
+                                        example: 'validation error'
+                                    errors:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                field:
+                                                    type: string
+                                                    example: username
+                                                error:
+                                                    type: string
+                                                    example: required
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/users'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: 'server error, cannot connect to database'
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events'
+
+    /api/events/{eventsId}:
+        get:
+            tags:
+                - 'Event'
+            description: Get single event data
+            summary: Get single event data
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  example:
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: success get single event
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: string
+                                        example: 200
+                                    data:
+                                        $ref: '#/components/schemas/event-response'
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/2'
+                '400':
+                    description: cannot get single event
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: string
+                                        example: 200
+                                    error:
+                                        type: string
+                                        example: cannot get event data with specified id
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/2'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: 'server error, cannot connect to database'
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/2'
+        put:
+            tags:
+                - 'Event'
+            security:
+                - JWTAuth: []
+            description: Update single event
+            summary: Update single event
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/event-request'
+            responses:
+                '200':
+                    description: success creating single user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: integer
+                                        example: 201
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                '400':
+                    description: validation error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 422
+                                    error:
+                                        type: string
+                                        example: Field name must be filled
+                                    errors:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                field:
+                                                    type: string
+                                                    example: username
+                                                error:
+                                                    type: string
+                                                    example: username must be filled
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 422
+                                    error:
+                                        type: string
+                                        example: Unauthorized user
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: cannot udpate user record
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+        delete:
+            tags:
+                - 'Event'
+            security:
+                - JWTAuth: []
+            description: Delete single event
+            summary: delete single event
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  example: 1
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: success deleting single user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: integer
+                                        example: 200
+                                    error:
+                                        type: string
+                                        example: null
+                                    data:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: string
+                                                example: 1
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                '400':
+                    description: specified parameter doesn't match with any record
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 400
+                                    error:
+                                        type: string
+                                        example: specified id doesn't match with any record
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 422
+                                    error:
+                                        type: string
+                                        example: Unauthorized user
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: cannot create user record
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/2'
+
+    /api/events/join:
+        post:
+            tags:
+                - 'Event'
+            security:
+                - JWTAuth: []
+            description: Join as a participants in an event
+            summary: Join as a participants in an event
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/participant-request'
+            responses:
+                '200':
+                    description: success joining an event
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: integer
+                                        example: 201
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/join'
+                                    data:
+                                        $ref: '#/components/schemas/participant-response'
+                '400':
+                    description: validation failed
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 400
+                                    error:
+                                        type: string
+                                        example: 'validation error'
+                                    errors:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                field:
+                                                    type: string
+                                                    example: username
+                                                error:
+                                                    type: string
+                                                    example: required
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/join'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: 'server error, cannot connect to database'
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/join'
+
+        delete:
+            tags:
+                - 'Event'
+            security:
+                - JWTAuth: []
+            description: Leave as a participants in an event
+            summary: Leave as a participants in an event
+            responses:
+                '200':
+                    description: success leaving an event
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: integer
+                                        example: 201
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/join'
+                                    data:
+                                        $ref: '#/components/schemas/participant-response'
+                '400':
+                    description: validation failed
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 400
+                                    error:
+                                        type: string
+                                        example: 'validation error'
+                                    errors:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                field:
+                                                    type: string
+                                                    example: username
+                                                error:
+                                                    type: string
+                                                    example: required
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/join'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: 'server error, cannot connect to database'
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/join'
+
+    # -----------------------------------------
+    #  Comments
+    # -----------------------------------------
+
+    /api/events/{eventId}/comments:
+        get:
+            tags:
+                - 'Comment'
+            description: Getting list of comment
+            parameters:
+                - in: query
+                  name: limit
+                  description: Limit rows per page
+                  schema:
+                      type: string
+                      example: 50
+                - in: query
+                  name: page
+                  description: Page number
+                  schema:
+                      type: string
+                      example: 1
+                - in: path
+                  name: Event ID
+                  description: Event ID that related to comment
+                  required: true
+                  schema:
+                      type: string
+                      example: 7
+            summary: getting list of comment
+            responses:
+                '200':
+                    description: Success getting list of comment
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    error:
+                                        type: string
+                                        example: null
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/1/comments'
+                                    data:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/comment-response'
+                                    pagination:
+                                        $ref: '#/components/schemas/pagination'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: 'server error, cannot connect to database'
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/categories'
+
+        post:
+            tags:
+                - 'Comment'
+            security:
+                - JWTAuth: []
+            description: Create single comment
+            summary: Create single comment
+            parameters:
+                - in: header
+                  name: Authorization
+                  required: true
+                  schema:
+                      type: string
+                      example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+                - in: path
+                  name: Event ID
+                  description: Event ID that related to comment
+                  required: true
+                  schema:
+                      type: string
+                      example: 7
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/comment-request'
+            responses:
+                '200':
+                    description: success creating single comment
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: integer
+                                        example: 201
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/2/comments'
+                                    data:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: integer
+                                                example: 8
+                '400':
+                    description: validation failed
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 400
+                                    error:
+                                        type: string
+                                        example: 'validation error'
+                                    errors:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                field:
+                                                    type: string
+                                                    example: title
+                                                error:
+                                                    type: string
+                                                    example: title is required
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/auth/events/2/comments'
+                '401':
+                    description: Unauthorized user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: integer
+                                        example: 401
+                                    error:
+                                        type: string
+                                        example: 'Unauthorized user'
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/2/comments'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: 'server error, cannot connect to database'
+
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/events/2/comments'
+    /api/events/comments/{commentId}:
+        put:
+            tags:
+                - 'Comment'
+            security:
+                - JWTAuth: []
+            description: Edit single comment
+            summary: Edit single comment
+            parameters:
+                - in: header
+                  name: Authorization
+                  required: true
+                  schema:
+                      type: string
+                      example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+                - in: path
+                  name: Comment ID
+                  description: specified comment ID to edit
+                  required: true
+                  schema:
+                      type: string
+                      example: 7
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/comment-request'
+            responses:
+                '200':
+                    description: success updating single comment
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: integer
+                                        example: 200
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/comments/2'
+                                    data:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: integer
+                                                example: 11
+                '400':
+                    description: validation error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 422
+                                    error:
+                                        type: string
+                                        example: Field title must be filled
+                                    errors:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                field:
+                                                    type: string
+                                                    example: title
+                                                error:
+                                                    type: string
+                                                    example: title must be filled
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/comments/2'
+                '401':
+                    description: Unauthorized user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: integer
+                                        example: 401
+                                    error:
+                                        type: string
+                                        example: 'Unauthorized user'
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/comments/2'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: cannot update category
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/comments/2'
+        delete:
+            tags:
+                - 'Comment'
+            security:
+                - JWTAuth: []
+            description: Delete single comments
+            summary: Delete single comments
+            parameters:
+                - in: path
+                  name: Comment ID
+                  description: specified comment ID to delete
+                  required: true
+                  schema:
+                      type: string
+                      example: 7
+                - in: header
+                  name: Authorization
+                  required: true
+                  schema:
+                      type: string
+                      example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+            responses:
+                '200':
+                    description: success deleting single category
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: integer
+                                        example: 200
+                                    error:
+                                        type: string
+                                        example: null
+                                    data:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: string
+                                                example: 1
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/comments/2'
+                '400':
+                    description: specified parameter doesn't match with any record
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 400
+                                    error:
+                                        type: string
+                                        example: specified id doesn't match with any record
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/comments/2'
+                '401':
+                    description: Unauthorized user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: integer
+                                        example: 401
+                                    error:
+                                        type: string
+                                        example: 'Unauthorized user'
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/events/comments/2'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: integer
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: cannot delete category
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/categories/2'
