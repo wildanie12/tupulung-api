@@ -6,6 +6,7 @@ require github.com/joho/godotenv v1.4.0
 
 require (
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
+	github.com/jinzhu/copier v0.3.5 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/labstack/echo/v4 v4.7.2 // indirect
