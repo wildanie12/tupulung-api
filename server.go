@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"tupulung/config"
+	"tupulung/utilities"
 )
 
 func main() {
 	config := config.Get()
-
-	fmt.Println(config)
+	utilities.NewMysqlGorm(config)
 }
