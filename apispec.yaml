@@ -42,9 +42,6 @@ components:
         user-request:
             type: object
             properties:
-                id:
-                    type: integer
-                    example: 7
                 name:
                     type: string
                     example: John
@@ -63,6 +60,9 @@ components:
                 avatar:
                     type: string
                     example: https://source.unsplash.com/1200x400/?sea
+                dob:
+                    type: string
+                    example: 2000/07/28
         user-response:
             type: object
             properties:
