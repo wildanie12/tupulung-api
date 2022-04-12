@@ -105,11 +105,13 @@ func (service EventService) Create(eventRequest entities.EventRequest, tokenReq 
 	event.UserID = user.ID
 
 	// repository action
-	datetime, err := time.Parse("2006-01-02", eventRequest.DatetimeEvent)
-	if err != nil {
-		return entities.EventResponse{}, web.WebError{Code: 400, Message: "date time event format is invalid"}
+	if eventRequest.DatetimeEvent != "" {
+		datetime, err := time.Parse("2006-01-02", eventRequest.DatetimeEvent)
+		if err != nil {
+			return entities.EventResponse{}, web.WebError{Code: 400, Message: "date time event format is invalid"}
+		}
+		event.DatetimeEvent = datetime
 	}
-	event.DatetimeEvent = datetime
 	event, err = service.eventRepo.Store(event)
 	if err != nil {
 		return entities.EventResponse{}, err

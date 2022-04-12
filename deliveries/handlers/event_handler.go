@@ -283,7 +283,7 @@ func (handler EventHandler) Update(c echo.Context) error {
 	eventReq := entities.EventRequest{}
 	c.Bind(&eventReq)
 
-	id, err := strconv.Atoi(c.Param("eventID"))
+	id, err := strconv.Atoi(c.Param("id"))
 	links := map[string]string{"self": config.Get().App.BaseURL + "/events/" + c.Param("id")}
 	if err != nil {
 		return c.JSON(400, helpers.MakeErrorResponse("ERROR", 400, err.Error(), links))
@@ -318,7 +318,7 @@ func (handler EventHandler) Update(c echo.Context) error {
 func (handler EventHandler) Delete(c echo.Context) error {
 
 	// Get params ID
-	id, err := strconv.Atoi(c.Param("eventID"))
+	id, err := strconv.Atoi(c.Param("id"))
 	links := map[string]string{"self": config.Get().App.BaseURL + "/events/" + c.Param("id")}
 	if err != nil {
 		return c.JSON(400, helpers.MakeErrorResponse("ERROR", 400, err.Error(), links))
