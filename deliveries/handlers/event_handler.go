@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 	"tupulung/config"
@@ -48,7 +47,7 @@ func (handler EventHandler) Index(c echo.Context) error {
 			"value":    category_id,
 		})
 	}
-	fmt.Println(category_id)
+
 	// Sort parameter
 	sorts := []map[string]interface{}{}
 	sortLocation := c.QueryParam("sortLocation")

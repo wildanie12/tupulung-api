@@ -155,11 +155,13 @@ func (service EventService) Update(eventRequest entities.EventRequest, id int, t
 	if event.UserID != user.ID {
 		return entities.EventResponse{}, web.WebError{Code: 401, Message: "Cannot update event that belongs to someone else"}
 	}
-	datetime, err := time.Parse("2006-01-02", eventRequest.DatetimeEvent)
-	if err != nil {
-		return entities.EventResponse{}, web.WebError{Code: 400, Message: "date time event format is invalid"}
+	if eventRequest.DatetimeEvent != "" {
+		datetime, err := time.Parse("2006-01-02", eventRequest.DatetimeEvent)
+		if err != nil {
+			return entities.EventResponse{}, web.WebError{Code: 400, Message: "date time event format is invalid"}
+		}
+		event.DatetimeEvent = datetime
 	}
-	event.DatetimeEvent = datetime
 	// Copy request to found event
 	copier.CopyWithOption(&event, &eventRequest, copier.Option{IgnoreEmpty: true, DeepCopy: true})
 
