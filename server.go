@@ -7,9 +7,11 @@ import (
 	"tupulung/utilities"
 
 	eventRepository "tupulung/repositories/event"
+	eventService "tupulung/services/event"
+	categoryRepository "tupulung/repositories/category"
 	userRepository "tupulung/repositories/user"
 	authService "tupulung/services/auth"
-	eventService "tupulung/services/event"
+	categoryService "tupulung/services/category"
 	userService "tupulung/services/user"
 
 	"github.com/labstack/echo/v4"
@@ -38,6 +40,12 @@ func main() {
 	authService := authService.NewAuthService(userRepository)
 	authHandler := handlers.NewAuthHandler(authService)
 	routes.RegisterAuthRoute(e, authHandler)
+
+	// User 
+	categoryRepository := categoryRepository.NewCategoryRepository(db)
+	categoryService := categoryService.NewCategoryService(categoryRepository)
+	categoryHandler := handlers.NewCategoryHandler(categoryService)
+	routes.RegisterCategoryRoute(e, categoryHandler)
 
 	e.Logger.Fatal(e.Start(":" + config.App.Port))
 }
