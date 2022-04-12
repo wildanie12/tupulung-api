@@ -16,6 +16,7 @@ type User struct {
 	Avatar    string
 	DOB       time.Time
 	DarkTheme string
+	Events	  []Event `gorm:"many2many:participants;foreignKey:ID;joinForeignKey:UserID;references:ID;joinReferences:EventID"`
 }
 
 type UserRequest struct {

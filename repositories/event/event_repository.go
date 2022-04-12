@@ -21,7 +21,7 @@ func NewEventRepository(db *gorm.DB) EventRepository {
 func (repo EventRepository) FindAll(limit int, offset int, filters []map[string]string, sorts []map[string]interface{}) ([]entities.Event, error) {
 	events := []entities.Event{}
 
-	builder := repo.db.Preload("User").Preload("Category").Limit(limit).Offset(offset)
+	builder := repo.db.Preload("User").Preload("Category").Preload("Participants").Limit(limit).Offset(offset)
 	// Where filters
 	for _, filter := range filters {
 		builder.Where(filter["field"]+" "+filter["operator"]+" ?", filter["value"])

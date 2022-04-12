@@ -18,6 +18,7 @@ type Event struct {
 	Description   string
 	User          User     `gorm:"foreignKey:UserID;references:ID"`
 	Category      Category `gorm:"foreignKey:CategoryID;references:ID"`
+	Participants   []User `gorm:"many2many:participants;foreignKey:ID;joinForeignKey:EventID;References:ID;joinReferences:UserID"`
 }
 
 type EventRequest struct {
@@ -42,6 +43,7 @@ type EventResponse struct {
 	Category      CategoryResponse `json:"category"`
 	UserID        uint             `json:"user_id"`
 	User          UserResponse     `json:"user"`
+	Participants  []UserResponse   `json:"participants"`
 	CreatedAt     time.Time        `json:"created_at"`
 	UpdatedAt     time.Time        `json:"updated_at"`
 }
