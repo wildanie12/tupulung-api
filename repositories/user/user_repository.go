@@ -1,7 +1,7 @@
 package user
 
 import (
-	entityDomain "tupulung/entities/domain"
+	entity "tupulung/entities"
 	web "tupulung/entities/web"
 
 	"gorm.io/gorm"
@@ -22,19 +22,19 @@ func NewUserRepository(db *gorm.DB) UserRepository {
  * -------------------------------
  * Mencari user berdasarkan ID
  */
-func (repo UserRepository) Find(id int) (entityDomain.User, error) {
+func (repo UserRepository) Find(id int) (entity.User, error) {
 
 	// Get user dari database
-	user := entityDomain.User{}
+	user := entity.User{}
 	tx := repo.db.Find(&user, id)
 	if tx.Error != nil {
 
 		// Return error dengan code 500 
-		return entityDomain.User{}, web.WebError{Code: 500, Message: "server error"}
+		return entity.User{}, web.WebError{Code: 500, Message: "server error"}
 	} else if tx.RowsAffected <= 0 {
 		
 		// Return error dengan code 400 jika tidak ditemukan
-		return entityDomain.User{}, web.WebError{Code: 400, Message: "cannot get user data with specified id"}
+		return entity.User{}, web.WebError{Code: 400, Message: "cannot get user data with specified id"}
 	}
 	return user, nil
 }
@@ -44,19 +44,19 @@ func (repo UserRepository) Find(id int) (entityDomain.User, error) {
  * -------------------------------
  * Mencari user tunggal berdasarkan column dan value
  */
-func (repo UserRepository) FindBy(field string, value string) (entityDomain.User, error) {
+func (repo UserRepository) FindBy(field string, value string) (entity.User, error) {
 
 	// Get user dari database
-	user := entityDomain.User{}
+	user := entity.User{}
 	tx := repo.db.Where(field + " = ?", value).Find(&user)
 	if tx.Error != nil {
 
 		// return kode 500 jika terjadi error
-		return entityDomain.User{}, web.WebError{ Code: 500, Message: tx.Error.Error() }
+		return entity.User{}, web.WebError{ Code: 500, Message: tx.Error.Error() }
 	} else if tx.RowsAffected <= 0 {
 
 		// return kode 400 jika tidak ditemukan
-		return entityDomain.User{}, web.WebError{ Code: 400, Message: "The requested ID doesn't match with any record" }
+		return entity.User{}, web.WebError{ Code: 400, Message: "The requested ID doesn't match with any record" }
 	}
 	return user, nil
 }
@@ -67,14 +67,14 @@ func (repo UserRepository) FindBy(field string, value string) (entityDomain.User
  * -------------------------------
  * Menambahkan user tunggal kedalam database
  */
-func (repo UserRepository) Store(user entityDomain.User) (entityDomain.User, error) {
+func (repo UserRepository) Store(user entity.User) (entity.User, error) {
 	
 	// insert user ke database
 	tx := repo.db.Create(&user)
 	if tx.Error != nil {
 
 		// return kode 500 jika error
-		return entityDomain.User{}, web.WebError{Code: 500, Message: tx.Error.Error()}
+		return entity.User{}, web.WebError{Code: 500, Message: tx.Error.Error()}
 	}
 	return user, nil
 }
@@ -85,14 +85,14 @@ func (repo UserRepository) Store(user entityDomain.User) (entityDomain.User, err
  * -------------------------------
  * Mengedit user tunggal berdasarkan ID
  */
-func (repo UserRepository) Update(user entityDomain.User, id int) (entityDomain.User, error) {
+func (repo UserRepository) Update(user entity.User, id int) (entity.User, error) {
 
 	// Update database
 	tx := repo.db.Save(&user)
 	if tx.Error != nil {
 
 		// return Kode 500 jika error
-		return entityDomain.User{}, web.WebError{Code: 500, Message: tx.Error.Error()}
+		return entity.User{}, web.WebError{Code: 500, Message: tx.Error.Error()}
 	}
 	return user, nil
 }
@@ -105,7 +105,7 @@ func (repo UserRepository) Update(user entityDomain.User, id int) (entityDomain.
 func (repo UserRepository) Delete(id int) error {
 
 	// Delete from database
-	tx := repo.db.Delete(&entityDomain.User{}, id)
+	tx := repo.db.Delete(&entity.User{}, id)
 	if tx.Error != nil {
 
 		// return kode 500 jika error

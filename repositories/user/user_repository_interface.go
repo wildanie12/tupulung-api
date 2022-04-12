@@ -1,6 +1,6 @@
 package user
 
-import entityDomain "tupulung/entities/domain"
+import entity "tupulung/entities"
 
 type UserRepositoryInterface interface {
 	/*
@@ -8,28 +8,28 @@ type UserRepositoryInterface interface {
 	 * -------------------------------
 	 * Mencari user berdasarkan ID
 	 */
-	Find(id int) (entityDomain.User, error)
+	Find(id int) (entity.User, error)
 
 	/*
 	 * Find By Column
 	 * -------------------------------
 	 * Mencari user tunggal berdasarkan column dan value
 	 */
-	FindBy(field string, value string) (entityDomain.User, error)
+	FindBy(field string, value string) (entity.User, error)
 
 	/*
 	 * Store
 	 * -------------------------------
 	 * Menambahkan user tunggal kedalam database
 	 */
-	Store(user entityDomain.User) (entityDomain.User, error)
+	Store(user entity.User) (entity.User, error)
 
 	/*
 	 * Update User
 	 * -------------------------------
 	 * Mengedit user tunggal berdasarkan ID
 	 */
-	Update(user entityDomain.User, id int) (entityDomain.User, error)
+	Update(user entity.User, id int) (entity.User, error)
 
 	/*
 	 * Delete
