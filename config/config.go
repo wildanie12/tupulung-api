@@ -42,6 +42,7 @@ func initConfig() *AppConfig {
 		config.Database.Port = "3306"
 		config.Database.Username = "root"
 		config.Database.Password = "root"
+		config.Database.Name = "tupulung"
 
 		return &config
 	}
