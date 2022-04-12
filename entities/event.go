@@ -16,6 +16,8 @@ type Event struct {
 	DatetimeEvent time.Time
 	Location string
 	Description string
+	User User `gorm:"foreignKey:UserID;references:ID"`
+	Category Category `gorm:"foreignKey:CategoryID;references:ID"`
 }
 
 type EventRequest struct {
