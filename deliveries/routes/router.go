@@ -16,6 +16,7 @@ func RegisterUserRoute(e *echo.Echo, userHandler *handlers.UserHandler) {
 	group.DELETE("/:id", userHandler.Delete, middleware.JWTMiddleware())	// Delete account
 }
 
-func RegisterAuthRoute(e *echo.Echo, authHandler *handlers.AuthHandler)  {
-	e.GET("/", authHandler.Index)
+func RegisterAuthRoute(e *echo.Echo, authHandler *handlers.AuthHandler) {
+	e.POST("/api/auth", authHandler.Login)
+	e.GET("/api/auth/me", authHandler.Me, middleware.JWTMiddleware())
 }

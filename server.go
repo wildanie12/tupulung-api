@@ -7,6 +7,7 @@ import (
 	"tupulung/utilities"
 
 	userRepository "tupulung/repositories/user"
+	authService "tupulung/services/auth"
 	userService "tupulung/services/user"
 
 	"github.com/labstack/echo/v4"
@@ -26,7 +27,8 @@ func main() {
 	routes.RegisterUserRoute(e, userHandler)
 
 	// Authentication
-	authHandler := handlers.NewAuthHandler()
+	authService := authService.NewAuthService(userRepository)
+	authHandler := handlers.NewAuthHandler(authService)
 	routes.RegisterAuthRoute(e, authHandler)
 
 	e.Logger.Fatal(e.Start(":" + config.App.Port))
