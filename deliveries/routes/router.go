@@ -17,8 +17,8 @@ func RegisterUserRoute(e *echo.Echo, userHandler *handlers.UserHandler) {
 func RegisterEventRoute(e *echo.Echo, eventHandler *handlers.EventHandler) {
 	group := e.Group("/api/events")
 	group.POST("", eventHandler.Create, middleware.JWTMiddleware())       // Registration event
+	group.GET("", eventHandler.Index)                                     // Get all Event
 	group.GET("/:id", eventHandler.Show)                                  // Detail event
-	group.GET("/", eventHandler.Index)                                    // Get all Event
 	e.GET("/api/users/:id/events", eventHandler.GetUserEvent)             // Detail event user
 	group.PUT("/:id", eventHandler.Update, middleware.JWTMiddleware())    // Edit profile event
 	group.DELETE("/:id", eventHandler.Delete, middleware.JWTMiddleware()) // Delete event

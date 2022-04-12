@@ -48,6 +48,9 @@ func (service EventService) GetPagination(limit, page int, filters []map[string]
 	if err != nil {
 		return web.Pagination{}, err
 	}
+	if limit <= 0 {
+		limit = 1
+	}
 	totalPages := totalRows / int64(limit)
 	if totalRows%int64(limit) > 0 {
 		totalPages++
