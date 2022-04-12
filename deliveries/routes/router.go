@@ -20,3 +20,10 @@ func RegisterAuthRoute(e *echo.Echo, authHandler *handlers.AuthHandler) {
 	e.POST("/api/auth", authHandler.Login)
 	e.GET("/api/auth/me", authHandler.Me, middleware.JWTMiddleware())
 }
+
+func RegisterCategoryRoute(e *echo.Echo, categoryHandler handlers.CategoryHandler) {
+	e.GET("/api/categories", categoryHandler.Index)
+	e.POST("/api/categories", categoryHandler.Create, middleware.JWTMiddleware())
+	e.PUT("/api/categories/:id", categoryHandler.Update, middleware.JWTMiddleware())
+	e.DELETE("/api/categories/:id", categoryHandler.Delete, middleware.JWTMiddleware())
+}

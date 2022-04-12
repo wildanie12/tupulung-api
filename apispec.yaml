@@ -1026,6 +1026,8 @@ paths:
         put:
             tags:
                 - 'Category'
+            security:
+                - JWTAuth: []
             description: Create single category
             summary: Create single category
             parameters:
@@ -1148,6 +1150,8 @@ paths:
         delete:
             tags:
                 - 'Category'
+            security:
+                - JWTAuth: []
             description: Delete single category
             summary: delete single category
             parameters:
