@@ -140,7 +140,7 @@ func (repo CommentRepository) Update(comment entities.Comment, id int) (entities
  * Delete comment berdasarkan ID
  */
 func (repo CommentRepository) Delete(id int) error {
-	tx := repo.db.Delete(&entities.Category{}, id)
+	tx := repo.db.Delete(&entities.Comment{}, id)
 	if tx.Error != nil {
 		return web.WebError{Code: 500, Message: tx.Error.Error()}
 	}
