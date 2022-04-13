@@ -42,7 +42,10 @@ func (service ParticipantService) Append(token interface{}, eventID int) error {
 		return web.WebError{Code: 400, Message: "No user matched with this authenticated user"}
 	}
 
-	event, _ = service.eventRepo.Find(eventID)
+	event, eventErr := service.eventRepo.Find(eventID)
+	if eventErr != nil {
+		return web.WebError{Code: 400, Message: "Event is not exist"}
+	}
 	tx := service.participantRepo.Append(user, event)
 	if tx != nil {
 		return web.WebError{Code: 400, Message: "You are already join this event"}
@@ -67,7 +70,10 @@ func (service ParticipantService) Delete(token interface{}, eventID int) error {
 		return web.WebError{Code: 400, Message: "No user matched with this authenticated user"}
 	}
 
-	event, _ = service.eventRepo.Find(eventID)
+	event, eventErr := service.eventRepo.Find(eventID)
+	if eventErr != nil {
+		return web.WebError{Code: 400, Message: "Event is not exist"}
+	}
 	tx := service.participantRepo.Delete(user, event)
 	if tx != nil {
 		return web.WebError{Code: 400, Message: "You are not a member of this event"}
