@@ -1,7 +1,6 @@
 package participant
 
 import (
-	"fmt"
 	"reflect"
 	"tupulung/entities"
 	"tupulung/entities/web"
@@ -32,7 +31,6 @@ func (service ParticipantService) Append(token interface{}, eventID int) error {
 
 	tokenID := token.(*jwt.Token)
 	claims := tokenID.Claims.(jwt.MapClaims)
-	fmt.Println(claims)
 	userIDReflect := reflect.ValueOf(claims).MapIndex(reflect.ValueOf("userID"))
 	if reflect.ValueOf(userIDReflect.Interface()).Kind().String() != "float64" {
 		return web.WebError{Code: 400, Message: "Invalid token, no userdata present"}
@@ -47,7 +45,7 @@ func (service ParticipantService) Append(token interface{}, eventID int) error {
 	event, _ = service.eventRepo.Find(eventID)
 	tx := service.participantRepo.Append(user, event)
 	if tx != nil {
-		return web.WebError{Code: 500, Message: "Cannot get newly created event"}
+		return web.WebError{Code: 400, Message: "You are already join this event"}
 	}
 	return nil
 }
@@ -72,7 +70,7 @@ func (service ParticipantService) Delete(token interface{}, eventID int) error {
 	event, _ = service.eventRepo.Find(eventID)
 	tx := service.participantRepo.Delete(user, event)
 	if tx != nil {
-		return web.WebError{Code: 500, Message: "Cannot get newly created event"}
+		return web.WebError{Code: 400, Message: "You are not a member of this event"}
 	}
 	return nil
 }

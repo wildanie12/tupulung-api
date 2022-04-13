@@ -35,7 +35,7 @@ func (handler ParticipantHandler) Append(c echo.Context) error {
 
 	if tx != nil {
 		if reflect.TypeOf(tx).String() == "web.WebError" {
-			webErr := err.(web.WebError)
+			webErr := tx.(web.WebError)
 			return c.JSON(webErr.Code, helpers.MakeErrorResponse("ERROR", webErr.Code, webErr.Error(), links))
 		}
 		return c.JSON(500, helpers.MakeErrorResponse("ERROR", 500, tx.Error(), links))
@@ -47,7 +47,7 @@ func (handler ParticipantHandler) Append(c echo.Context) error {
 		Code:   200,
 		Error:  nil,
 		Links:  links,
-		Data:   "success joined this event",
+		Data:   "Success joined this event",
 	})
 }
 
@@ -61,11 +61,11 @@ func (handler ParticipantHandler) Delete(c echo.Context) error {
 		return c.JSON(400, helpers.MakeErrorResponse("ERROR", 400, err.Error(), links))
 	}
 
-	tx := handler.participantService.Append(token, eventID)
+	tx := handler.participantService.Delete(token, eventID)
 
 	if tx != nil {
 		if reflect.TypeOf(tx).String() == "web.WebError" {
-			webErr := err.(web.WebError)
+			webErr := tx.(web.WebError)
 			return c.JSON(webErr.Code, helpers.MakeErrorResponse("ERROR", webErr.Code, webErr.Error(), links))
 		}
 	}
@@ -75,6 +75,6 @@ func (handler ParticipantHandler) Delete(c echo.Context) error {
 		Code:   200,
 		Error:  nil,
 		Links:  links,
-		Data:   "success leave this event",
+		Data:   "Success leave this event",
 	})
 }
