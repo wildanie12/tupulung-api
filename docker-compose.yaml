@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: tupulung-app
+        container_name: tupulung-container
+        restart: always
+        ports:
+            - '${APP_PORT}:${APP_PORT}'

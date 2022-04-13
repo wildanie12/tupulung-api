@@ -6,7 +6,7 @@ info:
     description: Event management system API, written in Golang.
 
 servers:
-    - url: 'http://34.238.121.143:8000'
+    - url: 'https://tupulung.wildani.com'
       description: Production
 
 tags:
@@ -1744,7 +1744,7 @@ paths:
                                                 type: string
                                                 example: 'http://example.com/api/users/2'
 
-    /api/events/join:
+    /api/events/join/{eventID}:
         post:
             tags:
                 - 'Event'
@@ -1837,6 +1837,7 @@ paths:
                                                 type: string
                                                 example: 'http://example.com/api/events/join'
 
+    /api/events/leave/{eventID}:
         delete:
             tags:
                 - 'Event'

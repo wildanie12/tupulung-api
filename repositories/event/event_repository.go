@@ -52,7 +52,7 @@ func (repo EventRepository) CountAll(filters []map[string]string) (int64, error)
 
 func (repo EventRepository) Find(id int) (entities.Event, error) {
 	event := entities.Event{}
-	tx := repo.db.Preload("User").Preload("Category").Find(&event, id)
+	tx := repo.db.Preload("User").Preload("Category").Preload("Participants").Find(&event, id)
 	if tx.Error != nil {
 		return entities.Event{}, web.WebError{Code: 500, Message: "server error"}
 	} else if tx.RowsAffected <= 0 {
@@ -63,7 +63,7 @@ func (repo EventRepository) Find(id int) (entities.Event, error) {
 
 func (repo EventRepository) FindBy(field string, value string) (entities.Event, error) {
 	event := entities.Event{}
-	tx := repo.db.Preload("User").Preload("Category").Where(field+" = ?", value).Find(&event)
+	tx := repo.db.Preload("User").Preload("Category").Preload("Participants").Where(field+" = ?", value).Find(&event)
 	if tx.Error != nil {
 		return entities.Event{}, web.WebError{Code: 500, Message: tx.Error.Error()}
 	} else if tx.RowsAffected <= 0 {
