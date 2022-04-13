@@ -23,7 +23,7 @@ type Event struct {
 }
 
 type EventRequest struct {
-	Title         string `form:"title"`
+	Title         string `form:"title" validator:"required;email"`
 	HostedBy      string `form:"hosted_by"`
 	Cover         string `form:"cover"`
 	DatetimeEvent string `form:"datetime_event"`
