@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"tupulung/config"
+	"tupulung/entities"
 	"tupulung/entities/web"
 	commentService "tupulung/services/comment"
 
@@ -100,7 +101,7 @@ func (handler CommentHandler) Index(c echo.Context) error {
 		links["previous"] = pageUrl + strconv.Itoa(page + 1)
 	}
 
-
+	// response
 	return c.JSON(http.StatusOK, web.SuccessListResponse{
 		Status: "OK",
 		Code: http.StatusOK,
@@ -109,4 +110,159 @@ func (handler CommentHandler) Index(c echo.Context) error {
 		Data: commentsRes,
 		Pagination: paginationRes,
 	}) 
+}
+
+/*
+ * Create comment 
+ * -------------------------------
+ * Membuat commnet pada event untuk authenticated user
+ */
+func (handler CommentHandler) Create(c echo.Context) error {
+	
+	// Url path parameter & link hateoas
+	eventID, err := strconv.Atoi(c.Param("eventID"))
+	links := map[string]string {}
+	links["self"] = config.Get().App.BaseURL + "/api/events/" + c.Param("eventID") + "/comments"
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, web.ErrorResponse {
+			Status: "OK",
+			Code: http.StatusBadRequest,
+			Error: "Invalid eventID parameter format",
+			Links: links,
+		})
+	}
+
+	// Populate form
+	commentReq := entities.CommentRequest{}
+	c.Bind(&commentReq)
+
+	// token
+	token := c.Get("user")
+
+	// Insert comment
+	commentRes, err := handler.commentService.Create(commentReq, eventID, token)
+	if err != nil {
+		if reflect.TypeOf(err).String() == "web.WebError" {
+			webErr := err.(web.WebError)
+			return c.JSON(webErr.Code, web.ErrorResponse{
+				Status: "ERROR",
+				Code: webErr.Code,
+				Error: webErr.Error(),
+				Links: links,
+			})
+		}
+	}
+
+	// response
+	return c.JSON(200, web.SuccessResponse{
+		Status: "OK",
+		Code: 201,
+		Error: nil,
+		Links: links,
+		Data: map[string]int{
+			"id": int(commentRes.ID),
+		},
+	})
+}
+
+/*
+ * Update Comment
+ * -------------------------------
+ * Edit komentar user, hanya pemilik komentar yang dapat mengedit
+ */
+func (handler CommentHandler) Update(c echo.Context) error {
+	
+	// Url path parameter & link hateoas
+	commentID, err := strconv.Atoi(c.Param("commentID"))
+	links := map[string]string {}
+	links["self"] = config.Get().App.BaseURL + "/api/events/comments/" + c.Param("commentID")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, web.ErrorResponse {
+			Status: "OK",
+			Code: http.StatusBadRequest,
+			Error: "Invalid commentID parameter format",
+			Links: links,
+		})
+	}
+
+	// Populate form
+	commentReq := entities.CommentRequest{}
+	c.Bind(&commentReq)
+
+	// token
+	token := c.Get("user")
+
+	// update comment
+	commentRes, err := handler.commentService.Update(commentReq, commentID, token)
+	if err != nil {
+		if reflect.TypeOf(err).String() == "web.WebError" {
+			webErr := err.(web.WebError)
+			return c.JSON(webErr.Code, web.ErrorResponse{
+				Status: "ERROR",
+				Code: webErr.Code,
+				Error: webErr.Error(),
+				Links: links,
+			})
+		}
+	}
+
+	// response
+	return c.JSON(200, web.SuccessResponse{
+		Status: "OK",
+		Code: 201,
+		Error: nil,
+		Links: links,
+		Data: map[string]int{
+			"id": int(commentRes.ID),
+		},
+	})
+}
+
+/*
+ * Delete Comment
+ * -------------------------------
+ * Hapus komentar user, hanya pemilik komentar yang dapat mengedit
+ */
+func (handler CommentHandler) Delete(c echo.Context) error {
+	
+	// Url path parameter & link hateoas
+	commentID, err := strconv.Atoi(c.Param("commentID"))
+	links := map[string]string {}
+	links["self"] = config.Get().App.BaseURL + "/api/events/comments/" + c.Param("commentID")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, web.ErrorResponse {
+			Status: "OK",
+			Code: http.StatusBadRequest,
+			Error: "Invalid commentID parameter format",
+			Links: links,
+		})
+	}
+
+	// token
+	token := c.Get("user")
+
+	// update comment
+	err = handler.commentService.Delete(commentID, token)
+	if err != nil {
+		if reflect.TypeOf(err).String() == "web.WebError" {
+			webErr := err.(web.WebError)
+			return c.JSON(webErr.Code, web.ErrorResponse{
+				Status: "ERROR",
+				Code: webErr.Code,
+				Error: webErr.Error(),
+				Links: links,
+			})
+		}
+	}
+
+	// response
+	return c.JSON(200, web.SuccessResponse{
+		Status: "OK",
+		Code: 201,
+		Error: nil,
+		Links: links,
+		Data: map[string]int{
+			"id": commentID,
+		},
+	})
 }

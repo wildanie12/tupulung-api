@@ -25,7 +25,7 @@ func NewCommentRepository(db *gorm.DB) *CommentRepository {
  */
 func (repo CommentRepository) FindAll(limit int, offset int, filters []map[string]string, sorts []map[string]interface{}) ([]entities.Comment, error) {
 	comments := []entities.Comment{}
-	builder := repo.db.Limit(limit).Offset(offset)
+	builder := repo.db.Limit(limit).Offset(offset).Preload("User")
 
 	// Where filters
 	for _, filter := range filters {
@@ -140,7 +140,7 @@ func (repo CommentRepository) Update(comment entities.Comment, id int) (entities
  * Delete comment berdasarkan ID
  */
 func (repo CommentRepository) Delete(id int) error {
-	tx := repo.db.Delete(&entities.Category{}, id)
+	tx := repo.db.Delete(&entities.Comment{}, id)
 	if tx.Error != nil {
 		return web.WebError{Code: 500, Message: tx.Error.Error()}
 	}

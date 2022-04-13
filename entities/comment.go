@@ -8,8 +8,8 @@ import (
 
 type Comment struct {
 	gorm.Model
-	EventID uint `gorm:"unique"`
-	UserID uint `gorm:"unique"`
+	EventID uint
+	UserID uint
 	Comment string
 	Event Event `gorm:"foreignKey:EventID;references:ID"`
 	User User `gorm:"foreignKey:UserID;references:ID"`
@@ -20,6 +20,7 @@ type CommentRequest struct {
 }
 
 type CommentResponse struct {
+	ID uint `json:"id"`
 	EventID uint `json:"event_id"`
 	UserID uint `json:"user_id"`
 	User UserResponse `json:"user"`
