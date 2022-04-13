@@ -3,8 +3,7 @@ package participant
 import "tupulung/entities"
 
 type ParticipantRepositoryInterface interface {
-	
-	
+
 	/*
 	 * Append
 	 * -------------------------------
@@ -18,11 +17,4 @@ type ParticipantRepositoryInterface interface {
 	 * Menghapus user dari event
 	 */
 	Delete(user entities.User, event entities.Event) error
-
-	/*
-	 * Find
-	 * -------------------------------
-	 * Menghapus user dari event
-	 */
-	Find(user entities.User, event entities.Event) error
 }
