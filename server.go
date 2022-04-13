@@ -6,15 +6,16 @@ import (
 	"tupulung/deliveries/routes"
 	"tupulung/utilities"
 
-	eventRepository "tupulung/repositories/event"
-	eventService "tupulung/services/event"
 	categoryRepository "tupulung/repositories/category"
+	eventRepository "tupulung/repositories/event"
 	userRepository "tupulung/repositories/user"
 	authService "tupulung/services/auth"
 	categoryService "tupulung/services/category"
+	eventService "tupulung/services/event"
 	userService "tupulung/services/user"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -23,6 +24,11 @@ func main() {
 	utilities.Migrate(db)
 
 	e := echo.New()
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.PATCH, echo.OPTIONS},
+	}))
 
 	// User
 	userRepository := userRepository.NewUserRepository(db)

@@ -6,7 +6,7 @@ info:
     description: Event management system API, written in Golang.
 
 servers:
-    - url: 'http://34.238.121.143:8000'
+    - url: 'https://tupulung.wildani.com'
       description: Production
 
 tags:
