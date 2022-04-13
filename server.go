@@ -6,12 +6,14 @@ import (
 	"tupulung/deliveries/routes"
 	"tupulung/utilities"
 
-	eventRepository "tupulung/repositories/event"
-	eventService "tupulung/services/event"
 	categoryRepository "tupulung/repositories/category"
+	commentRepository "tupulung/repositories/comment"
+	eventRepository "tupulung/repositories/event"
 	userRepository "tupulung/repositories/user"
 	authService "tupulung/services/auth"
 	categoryService "tupulung/services/category"
+	commentService "tupulung/services/comment"
+	eventService "tupulung/services/event"
 	userService "tupulung/services/user"
 
 	"github.com/labstack/echo/v4"
@@ -46,6 +48,12 @@ func main() {
 	categoryService := categoryService.NewCategoryService(categoryRepository)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 	routes.RegisterCategoryRoute(e, categoryHandler)
+
+	// Comment
+	commentRepository := commentRepository.NewCommentRepository(db)
+	commentService := commentService.NewCommentService(commentRepository)
+	commentHandler := handlers.NewCommentHandler(commentService)
+	routes.RegisterCommentRoute(e, commentHandler)
 
 	e.Logger.Fatal(e.Start(":" + config.App.Port))
 }

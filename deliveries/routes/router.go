@@ -35,3 +35,7 @@ func RegisterCategoryRoute(e *echo.Echo, categoryHandler handlers.CategoryHandle
 	e.PUT("/api/categories/:id", categoryHandler.Update, middleware.JWTMiddleware())
 	e.DELETE("/api/categories/:id", categoryHandler.Delete, middleware.JWTMiddleware())
 }
+
+func RegisterCommentRoute(e *echo.Echo, commentHandler *handlers.CommentHandler) {
+	e.GET("/api/events/:eventID/comments", commentHandler.Index)
+}

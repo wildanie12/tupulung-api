@@ -96,7 +96,7 @@ func (repo CommentRepository) FindBy(field string, value string) (entities.Comme
 func (repo CommentRepository) CountAll(filters []map[string]string) (int64, error) {
 	
 	var count int64
-	builder := repo.db.Model(&entities.Event{})
+	builder := repo.db.Model(&entities.Comment{})
 	// Where filters
 	for _, filter := range filters {
 		builder.Where(filter["field"]+" "+filter["operator"]+" ?", filter["value"])
