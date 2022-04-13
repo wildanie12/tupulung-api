@@ -14,7 +14,7 @@ func RegisterUserRoute(e *echo.Echo, userHandler *handlers.UserHandler) {
 	group.PUT("/:id", userHandler.Update, middleware.JWTMiddleware())    // Edit profile user
 	group.DELETE("/:id", userHandler.Delete, middleware.JWTMiddleware()) // Delete account
 }
-func RegisterEventRoute(e *echo.Echo, eventHandler *handlers.EventHandler) {
+func RegisterEventRoute(e *echo.Echo, eventHandler *handlers.EventHandler, participantHandler *handlers.ParticipantHandler) {
 	group := e.Group("/api/events")
 	group.POST("", eventHandler.Create, middleware.JWTMiddleware())       // Registration event
 	group.GET("", eventHandler.Index)                                     // Get all Event
@@ -22,6 +22,8 @@ func RegisterEventRoute(e *echo.Echo, eventHandler *handlers.EventHandler) {
 	e.GET("/api/users/:id/events", eventHandler.GetUserEvent)             // Detail event user
 	group.PUT("/:id", eventHandler.Update, middleware.JWTMiddleware())    // Edit profile event
 	group.DELETE("/:id", eventHandler.Delete, middleware.JWTMiddleware()) // Delete event
+	group.POST("/join/:id", participantHandler.Append, middleware.JWTMiddleware())
+	group.DELETE("/leave/:id", participantHandler.Delete, middleware.JWTMiddleware()) // Delete event
 }
 
 func RegisterAuthRoute(e *echo.Echo, authHandler *handlers.AuthHandler) {
