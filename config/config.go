@@ -9,18 +9,18 @@ import (
 type AppConfig struct {
 	App struct {
 		BaseURL string
-		Port string
+		Port    string
 	}
 	Database struct {
 		Username string
 		Password string
-		Host string
-		Port string
-		Name string
+		Host     string
+		Port     string
+		Name     string
 	}
 	AwsS3 struct {
-		Bucket string
-		Region string
+		Bucket    string
+		Region    string
 		AccessKey string
 		SecretKey string
 	}
@@ -69,7 +69,6 @@ func initConfig() *AppConfig {
 	config.AwsS3.Region = os.Getenv("AWS_S3_REGION")
 	config.AwsS3.AccessKey = os.Getenv("AWS_S3_ACCESS_KEY")
 	config.AwsS3.SecretKey = os.Getenv("AWS_S3_SECRET_KEY")
-
 
 	return &config
 }
