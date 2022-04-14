@@ -1,7 +1,6 @@
 package user
 
 import (
-	"fmt"
 	"mime/multipart"
 	"net/url"
 	"reflect"
@@ -148,7 +147,6 @@ func (service UserService) Update(userRequest entity.UserRequest, id int, avatar
 		if user.Avatar != "" {
 			u, _ := url.Parse(user.Avatar)
 			objectPathS3 := strings.TrimPrefix(u.Path, "/")
-			fmt.Println(objectPathS3)
 			helpers.DeleteFromS3(objectPathS3)
 		}
 
@@ -209,9 +207,16 @@ func (service UserService) Delete(id int, tokenReq interface{}) error {
 	}
 
 	// Cari user berdasarkan ID via repo
-	_, err := service.userRepo.Find(id)
+	user, err := service.userRepo.Find(id)
 	if err != nil {
 		return web.WebError{ Code: 400, Message: "The requested ID doesn't match with any record" }
+	}
+
+	// Delete avatar lama jika ada yang baru
+	if user.Avatar != "" {
+		u, _ := url.Parse(user.Avatar)
+		objectPathS3 := strings.TrimPrefix(u.Path, "/")
+		helpers.DeleteFromS3(objectPathS3)
 	}
 	
 	// Delete via repository
