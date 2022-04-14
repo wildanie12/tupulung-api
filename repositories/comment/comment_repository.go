@@ -53,7 +53,7 @@ func (repo CommentRepository) FindAll(limit int, offset int, filters []map[strin
 func (repo CommentRepository) Find(id int) (entities.Comment, error) {
 	// Get user dari database
 	user := entities.Comment{}
-	tx := repo.db.Find(&user, id)
+	tx := repo.db.Preload("User").Find(&user, id)
 	if tx.Error != nil {
 
 		// Return error dengan code 500 
@@ -75,7 +75,7 @@ func (repo CommentRepository) FindBy(field string, value string) (entities.Comme
 
 	// Get user dari database
 	user := entities.Comment{}
-	tx := repo.db.Where(field + " = ?", value).Find(&user)
+	tx := repo.db.Preload("User").Where(field + " = ?", value).Find(&user)
 	if tx.Error != nil {
 
 		// return kode 500 jika terjadi error
