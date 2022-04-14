@@ -1,20 +1,24 @@
 package category
 
 import (
+	"tupulung/deliveries/validations"
 	"tupulung/entities"
 	web "tupulung/entities/web"
 	categoryRepository "tupulung/repositories/category"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/copier"
 )
 
 type CategoryService struct {
 	categoryRepo categoryRepository.CategoryRepositoryInterface
+	validate *validator.Validate
 }
 
 func NewCategoryService(repository categoryRepository.CategoryRepositoryInterface) *CategoryService {
 	return &CategoryService{
 		categoryRepo: repository,
+		validate: validator.New(),
 	}
 }
 
@@ -75,12 +79,18 @@ func (service CategoryService) Find(id int) (entities.CategoryResponse, error) {
  */
 func (service CategoryService) Create(categoryRequest entities.CategoryRequest) (entities.CategoryResponse, error) {
 	
+	// validation
+	err := validations.ValidateCategoryRequest(service.validate, categoryRequest)
+	if err != nil {
+		return entities.CategoryResponse{}, err
+	}
+	
 	// convert request to domain entity
 	category := entities.Category{}
 	copier.Copy(&category, &categoryRequest)
 
 	// Repository action
-	category, err := service.categoryRepo.Store(category)
+	category, err = service.categoryRepo.Store(category)
 	if err != nil {
 		return entities.CategoryResponse{}, err
 	}
