@@ -5,10 +5,12 @@ import (
 	"reflect"
 	"strconv"
 	"tupulung/config"
+	"tupulung/deliveries/helpers"
 	"tupulung/entities"
 	"tupulung/entities/web"
 	userService "tupulung/services/user"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -37,6 +39,40 @@ func (handler UserHandler) Create(c echo.Context) error {
 	
 	// Define links (hateoas)
 	links := map[string]string{ "self": config.Get().App.BaseURL + "/api/users"}
+
+	// Read file avatar
+	avatar, err := c.FormFile("avatar")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Status: "ERROR",
+			Code: http.StatusBadRequest,
+			Error: "Avatar image format is invalid",
+			Links: links,
+		})
+	}
+	avatarFile, err := avatar.Open()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Status: "ERROR",
+			Code: http.StatusBadRequest,
+			Error: "Cannot process avatar image data",
+			Links: links,
+		})
+	}
+	defer avatarFile.Close()
+
+	// Upload avatar to S3
+	filename := uuid.New().String() + avatar.Filename
+	avatarURL, err := helpers.UploadFileToS3(c, "event/cover/" + filename, avatarFile)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Status: "ERROR",
+			Code: http.StatusInternalServerError,
+			Error: err.Error(),
+			Links: links,
+		})
+	}
+	userReq.Avatar = avatarURL
 
 	// registrasi user via call user service
 	userRes, err := handler.userService.Create(userReq)
