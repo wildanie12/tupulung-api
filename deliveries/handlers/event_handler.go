@@ -131,7 +131,8 @@ func (handler EventHandler) Show(c echo.Context) error {
 	if err != nil {
 		return c.JSON(400, helpers.MakeErrorResponse("ERROR", 400, err.Error(), links))
 	}
-	// Get productdata
+
+	// Get eventdata
 	event, err := handler.eventService.Find(id)
 	if err != nil {
 		if reflect.TypeOf(err).String() == "web.WebError" {
@@ -253,8 +254,11 @@ func (handler EventHandler) Create(c echo.Context) error {
 
 	token := c.Get("user")
 
+	// Read file cover
+	cover, _ := c.FormFile("cover")
+
 	// Insert event
-	eventRes, err := handler.eventService.Create(eventReq, token)
+	eventRes, err := handler.eventService.Create(eventReq, token, cover)
 	if err != nil {
 		if reflect.TypeOf(err).String() == "web.WebError" {
 			webErr := err.(web.WebError)
@@ -290,8 +294,11 @@ func (handler EventHandler) Update(c echo.Context) error {
 
 	token := c.Get("user")
 
+	// Read file cover
+	cover, _ := c.FormFile("cover")
+
 	// Product service call
-	eventRes, err := handler.eventService.Update(eventReq, id, token)
+	eventRes, err := handler.eventService.Update(eventReq, id, token, cover)
 	if err != nil {
 		if reflect.TypeOf(err).String() == "web.WebError" {
 			webErr := err.(web.WebError)

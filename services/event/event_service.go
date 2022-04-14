@@ -1,8 +1,12 @@
 package event
 
 import (
+	"mime/multipart"
+	"net/url"
 	"reflect"
+	"strings"
 	"time"
+	"tupulung/deliveries/helpers"
 	"tupulung/entities"
 
 	web "tupulung/entities/web"
@@ -10,6 +14,7 @@ import (
 	userRepository "tupulung/repositories/user"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 )
 
@@ -84,8 +89,8 @@ func (service EventService) Find(id int) (entities.EventResponse, error) {
  * Create event resource
  * --------------------------
  */
-func (service EventService) Create(eventRequest entities.EventRequest, tokenReq interface{}) (entities.EventResponse, error) {
-	// convert event to entities entity
+func (service EventService) Create(eventRequest entities.EventRequest, tokenReq interface{}, cover *multipart.FileHeader) (entities.EventResponse, error) {
+	// convert event to entities entities
 	event := entities.Event{}
 	copier.Copy(&event, &eventRequest)
 
@@ -112,6 +117,23 @@ func (service EventService) Create(eventRequest entities.EventRequest, tokenReq 
 		}
 		event.DatetimeEvent = datetime
 	}
+
+	if cover != nil {
+		coverFile, err := cover.Open()
+		if err != nil {
+			return entities.EventResponse{}, web.WebError{Code: 500, Message: "Cannot process cover image"}
+		}
+		defer coverFile.Close()
+
+		// Upload cover to S3
+		filename := uuid.New().String() + cover.Filename
+		coverURL, err := helpers.UploadFileToS3("event/cover/"+filename, coverFile)
+		if err != nil {
+			return entities.EventResponse{}, web.WebError{Code: 500, Message: err.Error()}
+		}
+		event.Cover = coverURL
+	}
+
 	event, err = service.eventRepo.Store(event)
 	if err != nil {
 		return entities.EventResponse{}, err
@@ -131,7 +153,7 @@ func (service EventService) Create(eventRequest entities.EventRequest, tokenReq 
  * Update event resource
  * --------------------------
  */
-func (service EventService) Update(eventRequest entities.EventRequest, id int, tokenReq interface{}) (entities.EventResponse, error) {
+func (service EventService) Update(eventRequest entities.EventRequest, id int, tokenReq interface{}, cover *multipart.FileHeader) (entities.EventResponse, error) {
 
 	// Find event
 	event, err := service.eventRepo.Find(id)
@@ -161,6 +183,27 @@ func (service EventService) Update(eventRequest entities.EventRequest, id int, t
 			return entities.EventResponse{}, web.WebError{Code: 400, Message: "date time event format is invalid"}
 		}
 		event.DatetimeEvent = datetime
+	}
+	if cover != nil {
+
+		// Delete previous cover
+		if event.Cover != "" {
+			u, _ := url.Parse(event.Cover)
+			objectPathS3 := strings.TrimPrefix(u.Path, "/")
+			helpers.DeleteFromS3(objectPathS3)
+		}
+
+		coverFile, err := cover.Open()
+		if err != nil {
+			return entities.EventResponse{}, web.WebError{Code: 500, Message: "cannot read cover image file"}
+		}
+		// Upload cover to S3
+		filename := uuid.New().String() + cover.Filename
+		coverURL, err := helpers.UploadFileToS3("cover/"+filename, coverFile)
+		if err != nil {
+			return entities.EventResponse{}, web.WebError{Code: 500, Message: err.Error()}
+		}
+		event.Cover = coverURL
 	}
 	// Copy request to found event
 	copier.CopyWithOption(&event, &eventRequest, copier.Option{IgnoreEmpty: true, DeepCopy: true})
@@ -207,6 +250,13 @@ func (service EventService) Delete(id int, tokenReq interface{}) error {
 	}
 	if event.UserID != user.ID {
 		return web.WebError{Code: 401, Message: "Cannot update event that belongs to someone else"}
+	}
+
+	// Delete previous cover
+	if event.Cover != "" {
+		u, _ := url.Parse(event.Cover)
+		objectPathS3 := strings.TrimPrefix(u.Path, "/")
+		helpers.DeleteFromS3(objectPathS3)
 	}
 
 	// Repository action
