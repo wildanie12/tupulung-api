@@ -7,14 +7,17 @@ import (
 	"tupulung/utilities"
 
 	categoryRepository "tupulung/repositories/category"
-	eventRepository "tupulung/repositories/event"
-	participantRepository "tupulung/repositories/participant"
+  categoryService "tupulung/services/category"
+	commentRepository "tupulung/repositories/comment"
+	commentService "tupulung/services/comment"
 	userRepository "tupulung/repositories/user"
+  userService "tupulung/services/user"
 	authService "tupulung/services/auth"
-	categoryService "tupulung/services/category"
+  eventRepository "tupulung/repositories/event"
 	eventService "tupulung/services/event"
+  participantRepository "tupulung/repositories/participant"
 	participantService "tupulung/services/participant"
-	userService "tupulung/services/user"
+	
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -57,6 +60,12 @@ func main() {
 	categoryService := categoryService.NewCategoryService(categoryRepository)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 	routes.RegisterCategoryRoute(e, categoryHandler)
+
+	// Comment
+	commentRepository := commentRepository.NewCommentRepository(db)
+	commentService := commentService.NewCommentService(commentRepository, userRepository)
+	commentHandler := handlers.NewCommentHandler(commentService)
+	routes.RegisterCommentRoute(e, commentHandler)
 
 	// routes.RegisterParticipantRoute(e, participantHandler)
 

@@ -19,10 +19,11 @@ type Event struct {
 	User          User     `gorm:"foreignKey:UserID;references:ID"`
 	Category      Category `gorm:"foreignKey:CategoryID;references:ID"`
 	Participants   []User `gorm:"many2many:participants;foreignKey:ID;joinForeignKey:EventID;References:ID;joinReferences:UserID"`
+	Comments 	  []Comment `gorm:"foreignKey:EventID;references:ID"`
 }
 
 type EventRequest struct {
-	Title         string `form:"title"`
+	Title         string `form:"title" validator:"required;email"`
 	HostedBy      string `form:"hosted_by"`
 	Cover         string `form:"cover"`
 	DatetimeEvent string `form:"datetime_event"`
