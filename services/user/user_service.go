@@ -1,14 +1,19 @@
 package user
 
 import (
+	"mime/multipart"
+	"net/url"
 	"reflect"
+	"strings"
 	"time"
+	"tupulung/deliveries/helpers"
 	entity "tupulung/entities"
 	"tupulung/entities/web"
 	userRepository "tupulung/repositories/user"
 	"tupulung/utilities"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -46,7 +51,7 @@ func (service UserService) Find(id int) (entity.UserResponse, error) {
  * Registrasi User dan mengembalikan token dan auth response
  * untuk auto sign in setelah register
  */
-func (service UserService) Create(userRequest entity.UserRequest) (entity.AuthResponse, error) {
+func (service UserService) Create(userRequest entity.UserRequest, avatar *multipart.FileHeader) (entity.AuthResponse, error) {
 	
 	// Konversi user request menjadi domain untuk diteruskan ke repository 
 	user := entity.User{}
@@ -66,6 +71,23 @@ func (service UserService) Create(userRequest entity.UserRequest) (entity.AuthRe
 		return entity.AuthResponse{}, web.WebError{ Code: 500, Message: "server error: hashing failed" }
 	}
 	user.Password = string(hashedPassword)
+
+	// Upload avatar if exists
+	if avatar != nil {
+		avatarFile, err := avatar.Open()
+		if err != nil {
+			return entity.AuthResponse{}, web.WebError{ Code: 500, Message: "Cannot process avatar image" } 
+		}
+		defer avatarFile.Close()
+		
+		// Upload avatar to S3
+		filename := uuid.New().String() + avatar.Filename
+		avatarURL, err := helpers.UploadFileToS3("avatar/" + filename, avatarFile)
+		if err != nil {
+			return entity.AuthResponse{}, web.WebError{ Code: 500, Message: err.Error() }
+		}
+		user.Avatar = avatarURL
+	}
 
 	// Insert ke sistem melewati repository
 	user, err = service.userRepo.Store(user)
@@ -97,7 +119,7 @@ func (service UserService) Create(userRequest entity.UserRequest) (entity.AuthRe
  * -------------------------------
  * Edit data user / edit profile
  */
-func (service UserService) Update(userRequest entity.UserRequest, id int, tokenReq interface{}) (entity.UserResponse, error) {
+func (service UserService) Update(userRequest entity.UserRequest, id int, avatar *multipart.FileHeader ,tokenReq interface{}) (entity.UserResponse, error) {
 
 	// Translate token
 	token := tokenReq.(*jwt.Token)
@@ -116,6 +138,29 @@ func (service UserService) Update(userRequest entity.UserRequest, id int, tokenR
 	user, err := service.userRepo.Find(id)
 	if err != nil {
 		return entity.UserResponse{}, web.WebError{ Code: 400, Message: "The requested ID doesn't match with any record" }
+	}
+
+	// Avatar 
+	if avatar != nil {
+
+		// Delete avatar lama jika ada yang baru
+		if user.Avatar != "" {
+			u, _ := url.Parse(user.Avatar)
+			objectPathS3 := strings.TrimPrefix(u.Path, "/")
+			helpers.DeleteFromS3(objectPathS3)
+		}
+
+		avatarFile, err := avatar.Open()
+		if err != nil {
+			return entity.UserResponse{}, web.WebError{ Code: 500, Message: "cannot read avatar image file" }
+		}
+		// Upload avatar to S3
+		filename := uuid.New().String() + avatar.Filename
+		avatarURL, err := helpers.UploadFileToS3("avatar/" + filename, avatarFile)
+		if err != nil {
+			return entity.UserResponse{}, web.WebError{ Code: 500, Message: err.Error() }
+		}
+		user.Avatar = avatarURL
 	}
 	
 	// Konversi dari request ke domain entity user - mengabaikan nilai kosong pada request
@@ -162,9 +207,16 @@ func (service UserService) Delete(id int, tokenReq interface{}) error {
 	}
 
 	// Cari user berdasarkan ID via repo
-	_, err := service.userRepo.Find(id)
+	user, err := service.userRepo.Find(id)
 	if err != nil {
 		return web.WebError{ Code: 400, Message: "The requested ID doesn't match with any record" }
+	}
+
+	// Delete avatar lama jika ada yang baru
+	if user.Avatar != "" {
+		u, _ := url.Parse(user.Avatar)
+		objectPathS3 := strings.TrimPrefix(u.Path, "/")
+		helpers.DeleteFromS3(objectPathS3)
 	}
 	
 	// Delete via repository
