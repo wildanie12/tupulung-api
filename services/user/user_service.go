@@ -1,8 +1,11 @@
 package user
 
 import (
+	"fmt"
 	"mime/multipart"
+	"net/url"
 	"reflect"
+	"strings"
 	"time"
 	"tupulung/deliveries/helpers"
 	entity "tupulung/entities"
@@ -80,7 +83,7 @@ func (service UserService) Create(userRequest entity.UserRequest, avatar *multip
 		
 		// Upload avatar to S3
 		filename := uuid.New().String() + avatar.Filename
-		avatarURL, err := helpers.UploadFileToS3("event/cover/" + filename, avatarFile)
+		avatarURL, err := helpers.UploadFileToS3("avatar/" + filename, avatarFile)
 		if err != nil {
 			return entity.AuthResponse{}, web.WebError{ Code: 500, Message: err.Error() }
 		}
@@ -143,10 +146,10 @@ func (service UserService) Update(userRequest entity.UserRequest, id int, avatar
 
 		// Delete avatar lama jika ada yang baru
 		if user.Avatar != "" {
-			err := helpers.DeleteFromS3(user.Avatar)
-			if err != nil {
-				return entity.UserResponse{}, web.WebError{ Code: 500, Message: err.Error() }
-			}
+			u, _ := url.Parse(user.Avatar)
+			objectPathS3 := strings.TrimPrefix(u.Path, "/")
+			fmt.Println(objectPathS3)
+			helpers.DeleteFromS3(objectPathS3)
 		}
 
 		avatarFile, err := avatar.Open()
@@ -155,7 +158,7 @@ func (service UserService) Update(userRequest entity.UserRequest, id int, avatar
 		}
 		// Upload avatar to S3
 		filename := uuid.New().String() + avatar.Filename
-		avatarURL, err := helpers.UploadFileToS3("event/cover/" + filename, avatarFile)
+		avatarURL, err := helpers.UploadFileToS3("avatar/" + filename, avatarFile)
 		if err != nil {
 			return entity.UserResponse{}, web.WebError{ Code: 500, Message: err.Error() }
 		}
