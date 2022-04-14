@@ -199,7 +199,7 @@ func (service EventService) Update(eventRequest entities.EventRequest, id int, t
 		}
 		// Upload cover to S3
 		filename := uuid.New().String() + cover.Filename
-		coverURL, err := helpers.UploadFileToS3("cover/"+filename, coverFile)
+		coverURL, err := helpers.UploadFileToS3("event/cover/"+filename, coverFile)
 		if err != nil {
 			return entities.EventResponse{}, web.WebError{Code: 500, Message: err.Error()}
 		}
