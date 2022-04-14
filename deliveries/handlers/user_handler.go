@@ -38,8 +38,11 @@ func (handler UserHandler) Create(c echo.Context) error {
 	// Define links (hateoas)
 	links := map[string]string{ "self": config.Get().App.BaseURL + "/api/users"}
 
+	// Read file avatar
+	avatar, _ := c.FormFile("avatar")
+
 	// registrasi user via call user service
-	userRes, err := handler.userService.Create(userReq)
+	userRes, err := handler.userService.Create(userReq, avatar)
 	if err != nil {
 
 		// return error response khusus jika err termasuk webError
@@ -144,9 +147,12 @@ func (handler UserHandler) Update(c echo.Context) error {
 
 	// Get token
 	token := c.Get("user")
+	
+	// avatar
+	avatar, _ := c.FormFile("avatar")
 
 	// Update via user service call
-	userRes, err := handler.userService.Update(userReq, id, token)
+	userRes, err := handler.userService.Update(userReq, id, avatar, token)
 	if err != nil {
 		if reflect.TypeOf(err).String() == "web.WebError" {
 			webErr := err.(web.WebError)

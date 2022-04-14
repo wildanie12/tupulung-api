@@ -18,6 +18,12 @@ type AppConfig struct {
 		Port string
 		Name string
 	}
+	AwsS3 struct {
+		Bucket string
+		Region string
+		AccessKey string
+		SecretKey string
+	}
 }
 
 var appConfig *AppConfig
@@ -43,6 +49,10 @@ func initConfig() *AppConfig {
 		config.Database.Username = "root"
 		config.Database.Password = "root"
 		config.Database.Name = "tupulung"
+		config.AwsS3.Bucket = ""
+		config.AwsS3.Region = ""
+		config.AwsS3.AccessKey = ""
+		config.AwsS3.SecretKey = ""
 
 		return &config
 	}
@@ -55,6 +65,11 @@ func initConfig() *AppConfig {
 	config.Database.Username = os.Getenv("DB_USERNAME")
 	config.Database.Password = os.Getenv("DB_PASSWORD")
 	config.Database.Name = os.Getenv("DB_NAME")
+	config.AwsS3.Bucket = os.Getenv("AWS_S3_BUCKET")
+	config.AwsS3.Region = os.Getenv("AWS_S3_REGION")
+	config.AwsS3.AccessKey = os.Getenv("AWS_S3_ACCESS_KEY")
+	config.AwsS3.SecretKey = os.Getenv("AWS_S3_SECRET_KEY")
+
 
 	return &config
 }
