@@ -7,17 +7,16 @@ import (
 	"tupulung/utilities"
 
 	categoryRepository "tupulung/repositories/category"
-  categoryService "tupulung/services/category"
 	commentRepository "tupulung/repositories/comment"
-	commentService "tupulung/services/comment"
+	eventRepository "tupulung/repositories/event"
+	participantRepository "tupulung/repositories/participant"
 	userRepository "tupulung/repositories/user"
-  userService "tupulung/services/user"
 	authService "tupulung/services/auth"
-  eventRepository "tupulung/repositories/event"
+	categoryService "tupulung/services/category"
+	commentService "tupulung/services/comment"
 	eventService "tupulung/services/event"
-  participantRepository "tupulung/repositories/participant"
 	participantService "tupulung/services/participant"
-	
+	userService "tupulung/services/user"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
