@@ -62,7 +62,7 @@ func (service UserService) Create(userRequest entity.UserRequest, avatar *multip
 	if avatar != nil {
 		userFiles = append(userFiles, avatar)
 	}
-	err := validations.ValidateUserRequest(service.validate, userRequest, userFiles)
+	err := validations.ValidateCreateUserRequest(service.validate, userRequest, userFiles)
 	if err != nil {
 		return entity.AuthResponse{}, err
 	}
@@ -134,6 +134,16 @@ func (service UserService) Create(userRequest entity.UserRequest, avatar *multip
  * Edit data user / edit profile
  */
 func (service UserService) Update(userRequest entity.UserRequest, id int, avatar *multipart.FileHeader ,tokenReq interface{}) (entity.UserResponse, error) {
+
+	// validation
+	userFiles := []*multipart.FileHeader{}
+	if avatar != nil {
+		userFiles = append(userFiles, avatar)
+	}
+	err := validations.ValidateUpdateUserRequest(userFiles)
+	if err != nil {
+		return entity.UserResponse{}, err
+	}
 
 	// Translate token
 	token := tokenReq.(*jwt.Token)

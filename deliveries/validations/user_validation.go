@@ -48,26 +48,66 @@ var userFileExtRules = map[string]string{
 }
 
 /*
- * User Validation - Validate
+ * User Validation - Validate Create User Request
  * -------------------------------
- * Validasi user berdasarkan validate tag 
- * yang ada pada user request
+ * Validasi user saat registrasi berdasarkan validate tag 
+ * yang ada pada user request dan file rules diatas
  */
-func ValidateUserRequest(validate *validator.Validate, userReq entities.UserRequest, userFiles []*multipart.FileHeader) error {
+func ValidateCreateUserRequest(validate *validator.Validate, userReq entities.UserRequest, userFiles []*multipart.FileHeader) error {
 
 	errors := []web.ValidationErrorItem{}
+	
+	validateUserStruct(validate, userReq, &errors)
+	validateUserFiles(userFiles, &errors)
+
+	if len(errors) > 0 {
+		return web.ValidationError{
+			Code: 400,
+			Message: "Validation error",
+			Errors: errors,
+		}
+	}
+	return nil
+}
+
+/*
+ * User Validation - Validate Update User Request
+ * -------------------------------
+ * Validasi user saat edit profile berdasarkan
+ * file rules diatas
+ */
+func ValidateUpdateUserRequest(userFiles []*multipart.FileHeader) error {
+
+	errors := []web.ValidationErrorItem{}
+	
+	validateUserFiles(userFiles, &errors)
+	if len(errors) > 0 {
+		return web.ValidationError{
+			Code: 400,
+			Message: "Validation error",
+			Errors: errors,
+		}
+	}
+	return nil
+}
+
+
+func validateUserStruct(validate *validator.Validate, userReq entities.UserRequest, errors *[]web.ValidationErrorItem) {
 	err := validate.Struct(userReq)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			field, _ := reflect.TypeOf(userReq).FieldByName(err.Field())
-			errors = append(errors, web.ValidationErrorItem{
+			*errors = append(*errors, web.ValidationErrorItem{
 				Field: field.Tag.Get("form"),
 				Error: userErrorMessages[err.Field() + "|" + err.ActualTag()],
 			})
 		}
-		
 	}
+}
 
+
+
+func validateUserFiles(userFiles []*multipart.FileHeader, errors *[]web.ValidationErrorItem) {
 	// File validation
 	for _, file := range userFiles {
 
@@ -77,9 +117,10 @@ func ValidateUserRequest(validate *validator.Validate, userReq entities.UserRequ
 		field = strings.Replace(field, "\"", "", -1)
 		field = strings.Replace(field, "\\", "", -1)
 
+		
 		// Size validations
 		if file.Size > int64(userFileSizeRules[field]) {
-			errors = append(errors, web.ValidationErrorItem{
+			*errors = append(*errors, web.ValidationErrorItem{
 				Field: field,
 				Error: field + " size cannot more than " + strconv.Itoa(userFileSizeRules[field] / 1024) + " KB",
 			})
@@ -96,19 +137,10 @@ func ValidateUserRequest(validate *validator.Validate, userReq entities.UserRequ
 			}
 		}
 		if !fileExtAllowed {
-			errors = append(errors, web.ValidationErrorItem{
+			*errors = append(*errors, web.ValidationErrorItem{
 				Field: field,
 				Error: field + " field must be type of " + strings.Join(allowedExt, ", "),
 			})
 		}
 	}
-
-	if len(errors) > 0 {
-		return web.ValidationError{
-			Code: 400,
-			Message: "Validation error",
-			Errors: errors,
-		}
-	}
-	return nil
 }

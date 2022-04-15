@@ -171,7 +171,17 @@ func (handler UserHandler) Update(c echo.Context) error {
 				Error: webErr.Error(),
 				Links: links,
 			})
+		} else if reflect.TypeOf(err).String() == "web.ValidationError" {
+			valErr := err.(web.ValidationError)
+			return c.JSON(valErr.Code, web.ValidationErrorResponse{
+				Status: "ERROR",
+				Code: valErr.Code,
+				Error: valErr.Error(),
+				Errors: valErr.Errors,
+				Links: links,
+			})
 		}
+		
 	}
 
 	// response
