@@ -15,14 +15,8 @@ import (
  * ke response berdasarkan struct field dan validate tagnya
  */
 var commentErrorMessages = map[string]string {
-	"Name|required": "Name field must be filled",
-	"Email|required": "Email field must be filled",
-	"Email|email": "Email field is not an email",
-	"Password|required": "Password field must be filled",
-	"Gender|required": "Gender field must be filled",
-	"DOB|required": "Date of birth field must be filled",
+	"Comment|required": "Comment field must be filled",
 }
-
 /*
  * Comment Validation - Validate Create Comment Request
  * -------------------------------
