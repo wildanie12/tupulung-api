@@ -21,7 +21,7 @@ func NewEventRepository(db *gorm.DB) EventRepository {
 func (repo EventRepository) FindAll(limit int, offset int, filters []map[string]string, sorts []map[string]interface{}) ([]entities.Event, error) {
 	events := []entities.Event{}
 
-	builder := repo.db.Preload("User").Preload("Category").Preload("Participants").Limit(limit).Offset(offset)
+	builder := repo.db.Preload("User").Preload("Category").Preload("Participants").Preload("Likes").Limit(limit).Offset(offset)
 	// Where filters
 	for _, filter := range filters {
 		builder.Where(filter["field"]+" "+filter["operator"]+" ?", filter["value"])
@@ -52,7 +52,7 @@ func (repo EventRepository) CountAll(filters []map[string]string) (int64, error)
 
 func (repo EventRepository) Find(id int) (entities.Event, error) {
 	event := entities.Event{}
-	tx := repo.db.Preload("User").Preload("Category").Preload("Participants").Find(&event, id)
+	tx := repo.db.Preload("User").Preload("Category").Preload("Participants").Preload("Likes").Find(&event, id)
 	if tx.Error != nil {
 		return entities.Event{}, web.WebError{Code: 500, Message: "server error"}
 	} else if tx.RowsAffected <= 0 {
@@ -63,7 +63,7 @@ func (repo EventRepository) Find(id int) (entities.Event, error) {
 
 func (repo EventRepository) FindBy(field string, value string) (entities.Event, error) {
 	event := entities.Event{}
-	tx := repo.db.Preload("User").Preload("Category").Preload("Participants").Where(field+" = ?", value).Find(&event)
+	tx := repo.db.Preload("User").Preload("Category").Preload("Participants").Preload("Likes").Where(field+" = ?", value).Find(&event)
 	if tx.Error != nil {
 		return entities.Event{}, web.WebError{Code: 500, Message: tx.Error.Error()}
 	} else if tx.RowsAffected <= 0 {
