@@ -20,13 +20,13 @@ type User struct {
 }
 
 type UserRequest struct {
-	Name     string `form:"name"`
-	Email    string `form:"email"`
-	Password string `form:"password"`
-	Gender   string `form:"gender"`
+	Name     string `form:"name" validate:"required"`
+	Email    string `form:"email" validate:"required,email"`
+	Password string `form:"password" validate:"required"`
+	Gender   string `form:"gender" validate:"required"`
 	Address  string `form:"address"`
 	Avatar   string `form:"avatar"`
-	DOB      string `form:"dob"`
+	DOB      string `form:"dob" validate:"required"`
 }
 
 type UserResponse struct {

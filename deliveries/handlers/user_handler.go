@@ -45,13 +45,22 @@ func (handler UserHandler) Create(c echo.Context) error {
 	userRes, err := handler.userService.Create(userReq, avatar)
 	if err != nil {
 
-		// return error response khusus jika err termasuk webError
+		// return error response khusus jika err termasuk webError / ValidationError
 		if reflect.TypeOf(err).String() == "web.WebError" {
 			webErr := err.(web.WebError)
 			return c.JSON(webErr.Code, web.ErrorResponse{
 				Status: "ERROR",
 				Code: webErr.Code,
 				Error: webErr.Error(),
+				Links: links,
+			})
+		} else if reflect.TypeOf(err).String() == "web.ValidationError" {
+			valErr := err.(web.ValidationError)
+			return c.JSON(valErr.Code, web.ValidationErrorResponse{
+				Status: "ERROR",
+				Code: valErr.Code,
+				Error: valErr.Error(),
+				Errors: valErr.Errors,
 				Links: links,
 			})
 		}
@@ -162,7 +171,17 @@ func (handler UserHandler) Update(c echo.Context) error {
 				Error: webErr.Error(),
 				Links: links,
 			})
+		} else if reflect.TypeOf(err).String() == "web.ValidationError" {
+			valErr := err.(web.ValidationError)
+			return c.JSON(valErr.Code, web.ValidationErrorResponse{
+				Status: "ERROR",
+				Code: valErr.Code,
+				Error: valErr.Error(),
+				Errors: valErr.Errors,
+				Links: links,
+			})
 		}
+		
 	}
 
 	// response
