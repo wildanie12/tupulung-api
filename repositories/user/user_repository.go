@@ -48,7 +48,7 @@ func (repo UserRepository) GetJoinedEvents(id int) ([]entity.Event, error) {
 
 	// Get user dari database
 	user := entity.User{}
-	tx := repo.db.Preload("Events").Find(&user, id)
+	tx := repo.db.Preload("Events").Preload("Events.User").Preload("Events.Category").Find(&user, id)
 	if tx.Error != nil {
 
 		// Return error dengan code 500 
