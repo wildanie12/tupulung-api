@@ -21,7 +21,7 @@ import (
 var eventErrorMessages = map[string]string{
 	"Title|required":         "Title field must be filled",
 	"HostedBy|required":      "HostedBy field must be filled",
-	"CategryID|required":     "CategryID field must be filled",
+	"CategoryID|required":     "Category id field must be filled",
 	"DatetimeEvent|required": "DatetimeEvent field must be filled",
 	"Location|required":      "Location field must be filled",
 	"Description|required":   "Description field must be filled",
