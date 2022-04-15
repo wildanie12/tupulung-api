@@ -12,7 +12,7 @@ type Category struct {
 }
 
 type CategoryRequest struct {
-	Title string `form:"title"`
+	Title string `form:"title" validate:"required"`
 }
 
 type CategoryResponse struct {

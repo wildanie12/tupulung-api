@@ -7,11 +7,13 @@ import (
 	"strings"
 	"time"
 	"tupulung/deliveries/helpers"
+	"tupulung/deliveries/validations"
 	entity "tupulung/entities"
 	"tupulung/entities/web"
 	userRepository "tupulung/repositories/user"
 	"tupulung/utilities"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
@@ -20,11 +22,13 @@ import (
 
 type UserService struct {
 	userRepo userRepository.UserRepositoryInterface
+	validate *validator.Validate
 }
 
 func NewUserService(repository userRepository.UserRepositoryInterface) *UserService {
 	return &UserService{
 		userRepo: repository,
+		validate: validator.New(),
 	}
 }
 
@@ -52,6 +56,16 @@ func (service UserService) Find(id int) (entity.UserResponse, error) {
  * untuk auto sign in setelah register
  */
 func (service UserService) Create(userRequest entity.UserRequest, avatar *multipart.FileHeader) (entity.AuthResponse, error) {
+
+	// Validation
+	userFiles := []*multipart.FileHeader{}
+	if avatar != nil {
+		userFiles = append(userFiles, avatar)
+	}
+	err := validations.ValidateCreateUserRequest(service.validate, userRequest, userFiles)
+	if err != nil {
+		return entity.AuthResponse{}, err
+	}
 	
 	// Konversi user request menjadi domain untuk diteruskan ke repository 
 	user := entity.User{}
@@ -120,6 +134,16 @@ func (service UserService) Create(userRequest entity.UserRequest, avatar *multip
  * Edit data user / edit profile
  */
 func (service UserService) Update(userRequest entity.UserRequest, id int, avatar *multipart.FileHeader ,tokenReq interface{}) (entity.UserResponse, error) {
+
+	// validation
+	userFiles := []*multipart.FileHeader{}
+	if avatar != nil {
+		userFiles = append(userFiles, avatar)
+	}
+	err := validations.ValidateUpdateUserRequest(userFiles)
+	if err != nil {
+		return entity.UserResponse{}, err
+	}
 
 	// Translate token
 	token := tokenReq.(*jwt.Token)
