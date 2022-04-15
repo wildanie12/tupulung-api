@@ -58,7 +58,11 @@ func (service UserService) Find(id int) (entity.UserResponse, error) {
 func (service UserService) Create(userRequest entity.UserRequest, avatar *multipart.FileHeader) (entity.AuthResponse, error) {
 
 	// Validation
-	err := validations.ValidateUserRequest(service.validate, userRequest, []*multipart.FileHeader{avatar})
+	userFiles := []*multipart.FileHeader{}
+	if avatar != nil {
+		userFiles = append(userFiles, avatar)
+	}
+	err := validations.ValidateUserRequest(service.validate, userRequest, userFiles)
 	if err != nil {
 		return entity.AuthResponse{}, err
 	}
