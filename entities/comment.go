@@ -16,7 +16,7 @@ type Comment struct {
 }
 
 type CommentRequest struct {
-	Comment string `form:"comment"`
+	Comment string `form:"comment" validate:"required"`
 }
 
 type CommentResponse struct {

@@ -2,11 +2,13 @@ package comment
 
 import (
 	"reflect"
+	"tupulung/deliveries/validations"
 	"tupulung/entities"
 	"tupulung/entities/web"
 	commentRepo "tupulung/repositories/comment"
 	userRepo "tupulung/repositories/user"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt"
 	"github.com/jinzhu/copier"
 )
@@ -14,12 +16,14 @@ import (
 type CommentService struct {
 	commentRepo commentRepo.CommentRepositoryInterface
 	userRepo userRepo.UserRepositoryInterface
+	validate *validator.Validate
 }
 
 func NewCommentService(commentRepo commentRepo.CommentRepositoryInterface, userRepo userRepo.UserRepositoryInterface) *CommentService {
 	return &CommentService{
 		commentRepo: commentRepo,
 		userRepo: userRepo,
+		validate: validator.New(),
 	}
 }
 
@@ -74,6 +78,12 @@ func (service CommentService) GetPagination(page, limit int, filters []map[strin
  * Membuat komentar baru berdasarkan user yang sedang login
  */
 func (service CommentService) Create(commentRequest entities.CommentRequest, eventID int, tokenReq interface{}) (entities.CommentResponse, error) {
+
+	// validation
+	err := validations.ValidateCreateCommentRequest(service.validate, commentRequest)
+	if err != nil {
+		return entities.CommentResponse{}, err
+	}
 	
 	// convert request to domain entity
 	comment := entities.Comment{}
@@ -114,6 +124,12 @@ func (service CommentService) Create(commentRequest entities.CommentRequest, eve
  * Edit komentar user, hanya pemilik komentar yang dapat mengedit
  */
 func (service CommentService) Update(commentRequest entities.CommentRequest, id int, tokenReq interface{}) (entities.CommentResponse, error) {
+	
+	// validation
+	err := validations.ValidateCreateCommentRequest(service.validate, commentRequest)
+	if err != nil {
+		return entities.CommentResponse{}, err
+	}
 
 	// Find comment
 	comment, err := service.commentRepo.Find(id)
