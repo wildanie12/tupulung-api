@@ -40,6 +40,28 @@ func (repo UserRepository) Find(id int) (entity.User, error) {
 }
 
 /*
+ * Get User joined event by ID
+ * -------------------------------
+ * Mengambil data event yang sudah di join oleh user
+ */
+func (repo UserRepository) GetJoinedEvents(id int) ([]entity.Event, error) {
+
+	// Get user dari database
+	user := entity.User{}
+	tx := repo.db.Preload("Events").Preload("Events.User").Preload("Events.Category").Find(&user, id)
+	if tx.Error != nil {
+
+		// Return error dengan code 500 
+		return []entity.Event{}, web.WebError{Code: 500, Message: "server error"}
+	} else if tx.RowsAffected <= 0 {
+		
+		// Return error dengan code 400 jika tidak ditemukan
+		return []entity.Event{}, web.WebError{Code: 400, Message: "cannot get user data with specified id"}
+	}
+	return user.Events, nil
+}
+
+/*
  * Find By Column
  * -------------------------------
  * Mencari user tunggal berdasarkan column dan value

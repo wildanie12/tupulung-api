@@ -131,6 +131,41 @@ func (handler UserHandler) Show(c echo.Context) error {
 }
 
 /*
+ * User Handler - Show
+ * -------------------------------
+ * Mendapatkan data user tunggal
+ * berdasarkan ID di parameter path 
+ */
+func (handler UserHandler) GetUserEvents(c echo.Context) error {
+
+	links := map[string]string{ "self": config.Get().App.BaseURL + "/api/users/events" }
+	token := c.Get("user")
+
+	// Get userdata via service call
+	user, err := handler.userService.GetJoinedEvents(token)
+	if err != nil {
+		if reflect.TypeOf(err).String() == "web.WebError" {
+			webErr := err.(web.WebError)
+			return c.JSON(webErr.Code, web.ErrorResponse{
+				Code: webErr.Code,
+				Status: "ERROR",
+				Error: webErr.Error(),
+				Links: links,
+			})
+		}
+	}
+
+	// response
+	return c.JSON(200, web.SuccessListResponse{
+		Status: "OK",
+		Code: 200,
+		Error: nil,
+		Links: links,
+		Data: user,
+	})
+}
+
+/*
  * User Handler - Update
  * -------------------------------
  * Edit profile user berdasarkan ID
