@@ -263,6 +263,15 @@ func (handler EventHandler) Create(c echo.Context) error {
 		if reflect.TypeOf(err).String() == "web.WebError" {
 			webErr := err.(web.WebError)
 			return c.JSON(webErr.Code, helpers.MakeErrorResponse("ERROR", webErr.Code, webErr.Error(), links))
+		} else if reflect.TypeOf(err).String() == "web.ValidationError" {
+			valErr := err.(web.ValidationError)
+			return c.JSON(valErr.Code, web.ValidationErrorResponse{
+				Status: "ERROR",
+				Code:   valErr.Code,
+				Error:  valErr.Error(),
+				Errors: valErr.Errors,
+				Links:  links,
+			})
 		}
 	}
 
@@ -303,7 +312,17 @@ func (handler EventHandler) Update(c echo.Context) error {
 		if reflect.TypeOf(err).String() == "web.WebError" {
 			webErr := err.(web.WebError)
 			return c.JSON(webErr.Code, helpers.MakeErrorResponse("ERROR", webErr.Code, webErr.Error(), links))
+		} else if reflect.TypeOf(err).String() == "web.ValidationError" {
+			valErr := err.(web.ValidationError)
+			return c.JSON(valErr.Code, web.ValidationErrorResponse{
+				Status: "ERROR",
+				Code:   valErr.Code,
+				Error:  valErr.Error(),
+				Errors: valErr.Errors,
+				Links:  links,
+			})
 		}
+
 	}
 
 	// response

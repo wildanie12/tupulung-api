@@ -16,20 +16,20 @@ type Event struct {
 	DatetimeEvent time.Time
 	Location      string
 	Description   string
-	User          User     `gorm:"foreignKey:UserID;references:ID"`
-	Category      Category `gorm:"foreignKey:CategoryID;references:ID"`
-	Participants   []User `gorm:"many2many:participants;foreignKey:ID;joinForeignKey:EventID;References:ID;joinReferences:UserID"`
-	Comments 	  []Comment `gorm:"foreignKey:EventID;references:ID"`
+	User          User      `gorm:"foreignKey:UserID;references:ID"`
+	Category      Category  `gorm:"foreignKey:CategoryID;references:ID"`
+	Participants  []User    `gorm:"many2many:participants;foreignKey:ID;joinForeignKey:EventID;References:ID;joinReferences:UserID"`
+	Comments      []Comment `gorm:"foreignKey:EventID;references:ID"`
 }
 
 type EventRequest struct {
-	Title         string `form:"title" validator:"required;email"`
-	HostedBy      string `form:"hosted_by"`
+	Title         string `form:"title" validate:"required"`
+	HostedBy      string `form:"hosted_by" validate:"required"`
 	Cover         string `form:"cover"`
-	DatetimeEvent string `form:"datetime_event"`
-	CategoryID    uint   `form:"category_id"`
-	Location      string `form:"location"`
-	Description   string `form:"description"`
+	DatetimeEvent string `form:"datetime_event" validate:"required"`
+	CategoryID    uint   `form:"category_id" validate:"required"`
+	Location      string `form:"location" validate:"required"`
+	Description   string `form:"description" validate:"required"`
 }
 
 type EventResponse struct {
