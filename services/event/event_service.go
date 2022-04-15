@@ -7,12 +7,14 @@ import (
 	"strings"
 	"time"
 	"tupulung/deliveries/helpers"
+	"tupulung/deliveries/validations"
 	"tupulung/entities"
 
 	web "tupulung/entities/web"
 	eventRepository "tupulung/repositories/event"
 	userRepository "tupulung/repositories/user"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
@@ -21,12 +23,14 @@ import (
 type EventService struct {
 	eventRepo eventRepository.EventRepositoryInterface
 	userRepo  userRepository.UserRepositoryInterface
+	validate  *validator.Validate
 }
 
 func NewEventService(repository eventRepository.EventRepositoryInterface, userRepository userRepository.UserRepositoryInterface) *EventService {
 	return &EventService{
 		eventRepo: repository,
 		userRepo:  userRepository,
+		validate:  validator.New(),
 	}
 }
 
@@ -90,6 +94,16 @@ func (service EventService) Find(id int) (entities.EventResponse, error) {
  * --------------------------
  */
 func (service EventService) Create(eventRequest entities.EventRequest, tokenReq interface{}, cover *multipart.FileHeader) (entities.EventResponse, error) {
+	// Validation
+	eventFiles := []*multipart.FileHeader{}
+	if cover != nil {
+		eventFiles = append(eventFiles, cover)
+	}
+	err := validations.ValidateCreateEventRequest(service.validate, eventRequest, eventFiles)
+	if err != nil {
+		return entities.EventResponse{}, err
+	}
+
 	// convert event to entities entities
 	event := entities.Event{}
 	copier.Copy(&event, &eventRequest)
@@ -154,6 +168,15 @@ func (service EventService) Create(eventRequest entities.EventRequest, tokenReq 
  * --------------------------
  */
 func (service EventService) Update(eventRequest entities.EventRequest, id int, tokenReq interface{}, cover *multipart.FileHeader) (entities.EventResponse, error) {
+	// Validation
+	eventFiles := []*multipart.FileHeader{}
+	if cover != nil {
+		eventFiles = append(eventFiles, cover)
+	}
+	err := validations.ValidateUpdateEventRequest(eventFiles)
+	if err != nil {
+		return entities.EventResponse{}, err
+	}
 
 	// Find event
 	event, err := service.eventRepo.Find(id)
