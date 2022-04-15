@@ -44,7 +44,7 @@ var userFileSizeRules = map[string]int{
  * [field]: ext1|ext2|ext3...
  */
 var userFileExtRules = map[string]string{
-	"avatar": "jpg|jpeg",
+	"avatar": "jpg|jpeg|png|webp|bmp",
 }
 
 /*
