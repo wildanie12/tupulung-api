@@ -14,16 +14,18 @@ func RegisterUserRoute(e *echo.Echo, userHandler *handlers.UserHandler) {
 	group.PUT("/:id", userHandler.Update, middleware.JWTMiddleware())    // Edit profile user
 	group.DELETE("/:id", userHandler.Delete, middleware.JWTMiddleware()) // Delete account
 }
-func RegisterEventRoute(e *echo.Echo, eventHandler *handlers.EventHandler, participantHandler *handlers.ParticipantHandler) {
+func RegisterEventRoute(e *echo.Echo, eventHandler *handlers.EventHandler, participantHandler *handlers.ParticipantHandler, likeHandler *handlers.LikeHandler) {
 	group := e.Group("/api/events")
-	group.POST("", eventHandler.Create, middleware.JWTMiddleware())       // Registration event
-	group.GET("", eventHandler.Index)                                     // Get all Event
-	group.GET("/:id", eventHandler.Show)                                  // Detail event
-	e.GET("/api/users/:id/events", eventHandler.GetUserEvent)             // Detail event user
-	group.PUT("/:id", eventHandler.Update, middleware.JWTMiddleware())    // Edit profile event
-	group.DELETE("/:id", eventHandler.Delete, middleware.JWTMiddleware()) // Delete event
-	group.POST("/join/:id", participantHandler.Append, middleware.JWTMiddleware())
-	group.DELETE("/leave/:id", participantHandler.Delete, middleware.JWTMiddleware()) // Delete event
+	group.POST("", eventHandler.Create, middleware.JWTMiddleware())                   // Registration event
+	group.GET("", eventHandler.Index)                                                 // Get all Event
+	group.GET("/:id", eventHandler.Show)                                              // Detail event
+	e.GET("/api/users/:id/events", eventHandler.GetUserEvent)                         // Detail user event
+	group.PUT("/:id", eventHandler.Update, middleware.JWTMiddleware())                // Edit profile event
+	group.DELETE("/:id", eventHandler.Delete, middleware.JWTMiddleware())             // Delete event
+	group.POST("/join/:id", participantHandler.Append, middleware.JWTMiddleware())    // Join an event
+	group.DELETE("/leave/:id", participantHandler.Delete, middleware.JWTMiddleware()) // Leave an event
+	group.POST("/like/:id", likeHandler.Append, middleware.JWTMiddleware())           // Like an event
+	group.DELETE("/dislike/:id", likeHandler.Delete, middleware.JWTMiddleware())      // Dislike an event
 }
 
 func RegisterAuthRoute(e *echo.Echo, authHandler *handlers.AuthHandler) {
