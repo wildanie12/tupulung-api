@@ -524,6 +524,80 @@ paths:
                                                 type: string
                                                 example: 'http://domain.com/api/users'
 
+    /api/users/events:
+        get:
+            tags:
+                - 'User'
+            description: Get user joined events
+            summary: Get user joined events
+            security:
+                - JWTAuth: []
+            responses:
+                '200':
+                    description: success get single user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: OK
+                                    code:
+                                        type: string
+                                        example: 200
+                                    data:
+                                        $ref: '#/components/schemas/event-response'
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://example.com/api/users/events'
+                '400':
+                    description: cannot get single user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ERROR
+                                    code:
+                                        type: string
+                                        example: 200
+                                    error:
+                                        type: string
+                                        example: cannot get user data with specified id
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/users/events'
+                '500':
+                    description: server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: 'ERROR'
+                                    code:
+                                        type: string
+                                        example: 500
+                                    error:
+                                        type: string
+                                        example: 'server error, cannot connect to database'
+                                    links:
+                                        type: object
+                                        properties:
+                                            self:
+                                                type: string
+                                                example: 'http://domain.com/api/users/events'
     /api/users/{userId}:
         get:
             tags:

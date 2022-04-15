@@ -11,6 +11,7 @@ func RegisterUserRoute(e *echo.Echo, userHandler *handlers.UserHandler) {
 	group := e.Group("/api/users")
 	group.POST("", userHandler.Create)                                   // Registration
 	group.GET("/:id", userHandler.Show)                                  // Detail User
+	group.GET("/events", userHandler.GetUserEvents, middleware.JWTMiddleware())                                  // Detail User
 	group.PUT("/:id", userHandler.Update, middleware.JWTMiddleware())    // Edit profile user
 	group.DELETE("/:id", userHandler.Delete, middleware.JWTMiddleware()) // Delete account
 }
