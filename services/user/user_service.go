@@ -50,6 +50,35 @@ func (service UserService) Find(id int) (entity.UserResponse, error) {
 }
 
 /*
+ * User Service - Get User joined events
+ * -------------------------------
+ * Mengambil data event yang sudah di join oleh user
+ */
+func (service UserService) GetJoinedEvents(tokenReq interface{}) ([]entity.EventResponse, error) {
+
+	// Translate token
+	token := tokenReq.(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	userIDReflect := reflect.ValueOf(claims).MapIndex(reflect.ValueOf("userID"))  // Mengambil tipe data dari claims userID
+	if reflect.ValueOf(userIDReflect.Interface()).Kind().String() != "float64" { // Tolak jika bukan float64
+		return []entity.EventResponse{}, web.WebError{ Code: 400, Message: "Invalid token, no userdata present" }
+	}
+	
+	// Mengambil data user dari repository
+	events, err := service.userRepo.GetJoinedEvents(int(claims["userID"].(float64)))
+	if err != nil {
+		return []entity.EventResponse{}, err
+	}
+	
+
+	// proses menjadi user response
+	eventRes  := []entity.EventResponse{}
+	copier.Copy(&eventRes, &events)
+
+	return eventRes, err
+}
+
+/*
  * User Service - Create (register)
  * -------------------------------
  * Registrasi User dan mengembalikan token dan auth response

@@ -11,6 +11,13 @@ type UserRepositoryInterface interface {
 	Find(id int) (entity.User, error)
 
 	/*
+	* Get User joined event by ID
+	* -------------------------------
+	* Mengambil data event yang sudah di join oleh user
+	*/
+	GetJoinedEvents(id int) ([]entity.Event, error)
+
+	/*
 	 * Find By Column
 	 * -------------------------------
 	 * Mencari user tunggal berdasarkan column dan value
