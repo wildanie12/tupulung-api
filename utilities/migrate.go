@@ -13,5 +13,6 @@ func Migrate(db *gorm.DB) {
 		&entities.Event{},
 		&entities.Comment{},
 		&entities.Participant{},
+		&entities.Like{},
 	)
 }

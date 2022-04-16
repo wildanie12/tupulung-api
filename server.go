@@ -9,12 +9,14 @@ import (
 	categoryRepository "tupulung/repositories/category"
 	commentRepository "tupulung/repositories/comment"
 	eventRepository "tupulung/repositories/event"
+	likeRepository "tupulung/repositories/like"
 	participantRepository "tupulung/repositories/participant"
 	userRepository "tupulung/repositories/user"
 	authService "tupulung/services/auth"
 	categoryService "tupulung/services/category"
 	commentService "tupulung/services/comment"
 	eventService "tupulung/services/event"
+	likeService "tupulung/services/like"
 	participantService "tupulung/services/participant"
 	userService "tupulung/services/user"
 
@@ -47,7 +49,10 @@ func main() {
 	participantRepository := participantRepository.NewParticipantRepository(db)
 	participantService := participantService.NewParticipantService(participantRepository, userRepository, eventRepository)
 	participantHandler := handlers.NewParticipantHandler(participantService)
-	routes.RegisterEventRoute(e, eventHandler, participantHandler)
+	likeRepository := likeRepository.NewLikeRepository(db)
+	likeService := likeService.NewLikeService(likeRepository, userRepository, eventRepository)
+	likeHandler := handlers.NewLikeHandler(likeService)
+	routes.RegisterEventRoute(e, eventHandler, participantHandler, likeHandler)
 
 	// Authentication
 	authService := authService.NewAuthService(userRepository)
