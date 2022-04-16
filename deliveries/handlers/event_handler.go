@@ -47,6 +47,14 @@ func (handler EventHandler) Index(c echo.Context) error {
 			"value":    category_id,
 		})
 	}
+	location := c.QueryParam("location")
+	if location != "" {
+		filters = append(filters, map[string]string{
+			"field":    "location",
+			"operator": "LIKE",
+			"value":    "%" + location + "%",
+		})
+	}
 
 	// Sort parameter
 	sorts := []map[string]interface{}{}
