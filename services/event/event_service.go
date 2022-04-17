@@ -94,8 +94,18 @@ func (service EventService) GetPagination(limit, page int, filters []map[string]
 func (service EventService) Find(id int) (entities.EventResponse, error) {
 
 	event, err := service.eventRepo.Find(id)
+	if err != nil {
+		return entities.EventResponse{}, err
+	}
 	eventRes := entities.EventResponse{}
 	copier.Copy(&eventRes, &event)
+
+	// Aggregate event likes
+	count, err := service.likeRepo.CountLikeByEvent(int(event.ID))
+	if err != nil {
+		count = 0
+	}
+	eventRes.Likes = uint(count)
 
 	return eventRes, err
 }
