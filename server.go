@@ -38,14 +38,15 @@ func main() {
 
 	// User
 	userRepository := userRepository.NewUserRepository(db)
-	userService := userService.NewUserService(userRepository)
-	userHandler := handlers.NewUserHandler(userService)
-	routes.RegisterUserRoute(e, userHandler)
+	
 
-	// Event
 	eventRepository := eventRepository.NewEventRepository(db)
 	likeRepository := likeRepository.NewLikeRepository(db)
 	participantRepository := participantRepository.NewParticipantRepository(db)
+
+	userService := userService.NewUserService(userRepository, eventRepository)
+	userHandler := handlers.NewUserHandler(userService)
+	routes.RegisterUserRoute(e, userHandler)
 
 	eventService := eventService.NewEventService(eventRepository, userRepository, likeRepository)
 	participantService := participantService.NewParticipantService(participantRepository, userRepository, eventRepository)

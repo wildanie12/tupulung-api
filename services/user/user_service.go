@@ -4,12 +4,14 @@ import (
 	"mime/multipart"
 	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 	"tupulung/deliveries/helpers"
 	"tupulung/deliveries/validations"
 	entity "tupulung/entities"
 	"tupulung/entities/web"
+	eventRepository "tupulung/repositories/event"
 	userRepository "tupulung/repositories/user"
 	"tupulung/utilities"
 
@@ -22,12 +24,14 @@ import (
 
 type UserService struct {
 	userRepo userRepository.UserRepositoryInterface
+	eventRepo eventRepository.EventRepositoryInterface
 	validate *validator.Validate
 }
 
-func NewUserService(repository userRepository.UserRepositoryInterface) *UserService {
+func NewUserService(repository userRepository.UserRepositoryInterface, eventRepo eventRepository.EventRepositoryInterface) *UserService {
 	return &UserService{
 		userRepo: repository,
+		eventRepo: eventRepo,
 		validate: validator.New(),
 	}
 }
@@ -271,6 +275,16 @@ func (service UserService) Delete(id int, tokenReq interface{}) error {
 		objectPathS3 := strings.TrimPrefix(u.Path, "/")
 		helpers.DeleteFromS3(objectPathS3)
 	}
+
+	// Delete user event
+	filters := []map[string]string{
+		{
+			"field": "user_id",
+			"operator": "=",
+			"value": strconv.Itoa(int(user.ID)),
+		},
+	}
+	service.eventRepo.DeleteBatch(filters)
 	
 	// Delete via repository
 	err = service.userRepo.Delete(id)

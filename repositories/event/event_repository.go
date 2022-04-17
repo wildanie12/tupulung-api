@@ -95,3 +95,18 @@ func (repo EventRepository) Delete(id int) error {
 	}
 	return nil
 }
+
+func (repo EventRepository) DeleteBatch(filters []map[string]string) (error) {
+
+	builder := repo.db
+	// Where filters
+	// for _, filter := range filters {
+	// 	builder.Where(filter["field"]+" "+filter["operator"]+" ?", filter["value"])
+	// 	fmt.Println(filter["field"]+" "+filter["operator"]+" ?")
+	// }
+	tx := builder.Delete(&entities.Event{}, filters[0]["field"]+" "+filters[0]["operator"]+" ?", filters[0]["value"])
+	if tx.Error != nil {
+		return web.WebError{Code: 400, Message: tx.Error.Error()}
+	}
+	return nil
+}
