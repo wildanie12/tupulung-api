@@ -5,6 +5,13 @@ import "tupulung/entities"
 type LikeRepositoryInterface interface {
 
 	/*
+	 * Count like
+	 * -------------------------------
+	 * Menghitung like berdasarkan event
+	 */
+	CountLikeByEvent(eventId int) (int64, error)
+
+	/*
 	 * Append
 	 * -------------------------------
 	 * Menambahkan user ke event
