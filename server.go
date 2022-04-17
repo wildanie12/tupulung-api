@@ -38,19 +38,22 @@ func main() {
 
 	// User
 	userRepository := userRepository.NewUserRepository(db)
-	userService := userService.NewUserService(userRepository)
+	
+
+	eventRepository := eventRepository.NewEventRepository(db)
+	likeRepository := likeRepository.NewLikeRepository(db)
+	participantRepository := participantRepository.NewParticipantRepository(db)
+
+	userService := userService.NewUserService(userRepository, eventRepository)
 	userHandler := handlers.NewUserHandler(userService)
 	routes.RegisterUserRoute(e, userHandler)
 
-	// Event
-	eventRepository := eventRepository.NewEventRepository(db)
-	eventService := eventService.NewEventService(eventRepository, userRepository)
-	eventHandler := handlers.NewEventHandler(eventService)
-	participantRepository := participantRepository.NewParticipantRepository(db)
+	eventService := eventService.NewEventService(eventRepository, userRepository, likeRepository)
 	participantService := participantService.NewParticipantService(participantRepository, userRepository, eventRepository)
-	participantHandler := handlers.NewParticipantHandler(participantService)
-	likeRepository := likeRepository.NewLikeRepository(db)
 	likeService := likeService.NewLikeService(likeRepository, userRepository, eventRepository)
+	
+	eventHandler := handlers.NewEventHandler(eventService)
+	participantHandler := handlers.NewParticipantHandler(participantService)
 	likeHandler := handlers.NewLikeHandler(likeService)
 	routes.RegisterEventRoute(e, eventHandler, participantHandler, likeHandler)
 

@@ -20,7 +20,6 @@ func NewEventRepository(db *gorm.DB) EventRepository {
 
 func (repo EventRepository) FindAll(limit int, offset int, filters []map[string]string, sorts []map[string]interface{}) ([]entities.Event, error) {
 	events := []entities.Event{}
-	likes := []entities.Like{}
 	builder := repo.db.Preload("User").Preload("Category").Preload("Participants").Limit(limit).Offset(offset)
 	// Where filters
 	for _, filter := range filters {
@@ -33,10 +32,6 @@ func (repo EventRepository) FindAll(limit int, offset int, filters []map[string]
 	tx := builder.Find(&events)
 	if tx.Error != nil {
 		return []entities.Event{}, web.WebError{Code: 500, Message: tx.Error.Error()}
-	}
-	for key := range events {
-		repo.db.Where("event_id=?", events[key].ID).Find(&likes)
-		events[key].Likes = uint(len(likes))
 	}
 	return events, nil
 }
@@ -56,29 +51,23 @@ func (repo EventRepository) CountAll(filters []map[string]string) (int64, error)
 
 func (repo EventRepository) Find(id int) (entities.Event, error) {
 	event := entities.Event{}
-	likes := []entities.Like{}
 	tx := repo.db.Preload("User").Preload("Category").Preload("Participants").Find(&event, id)
 	if tx.Error != nil {
 		return entities.Event{}, web.WebError{Code: 500, Message: "server error"}
 	} else if tx.RowsAffected <= 0 {
 		return entities.Event{}, web.WebError{Code: 400, Message: "cannot get event data with specified id"}
 	}
-	repo.db.Where("event_id=?", event.ID).Find(&likes)
-	event.Likes = uint(len(likes))
 	return event, nil
 }
 
 func (repo EventRepository) FindBy(field string, value string) (entities.Event, error) {
 	event := entities.Event{}
-	likes := []entities.Like{}
 	tx := repo.db.Preload("User").Preload("Category").Preload("Participants").Where(field+" = ?", value).Find(&event)
 	if tx.Error != nil {
 		return entities.Event{}, web.WebError{Code: 500, Message: tx.Error.Error()}
 	} else if tx.RowsAffected <= 0 {
 		return entities.Event{}, web.WebError{Code: 400, Message: "The requested ID doesn't match with any record"}
 	}
-	repo.db.Where("event_id=?", event.ID).Find(&likes)
-	event.Likes = uint(len(likes))
 	return event, nil
 }
 
@@ -103,6 +92,21 @@ func (repo EventRepository) Delete(id int) error {
 	tx := repo.db.Delete(&entities.Event{}, id)
 	if tx.Error != nil {
 		return web.WebError{Code: 500, Message: tx.Error.Error()}
+	}
+	return nil
+}
+
+func (repo EventRepository) DeleteBatch(filters []map[string]string) (error) {
+
+	builder := repo.db
+	// Where filters
+	// for _, filter := range filters {
+	// 	builder.Where(filter["field"]+" "+filter["operator"]+" ?", filter["value"])
+	// 	fmt.Println(filter["field"]+" "+filter["operator"]+" ?")
+	// }
+	tx := builder.Delete(&entities.Event{}, filters[0]["field"]+" "+filters[0]["operator"]+" ?", filters[0]["value"])
+	if tx.Error != nil {
+		return web.WebError{Code: 400, Message: tx.Error.Error()}
 	}
 	return nil
 }
