@@ -9,12 +9,14 @@ import (
 	categoryRepository "tupulung/repositories/category"
 	commentRepository "tupulung/repositories/comment"
 	eventRepository "tupulung/repositories/event"
+	likeRepository "tupulung/repositories/like"
 	participantRepository "tupulung/repositories/participant"
 	userRepository "tupulung/repositories/user"
 	authService "tupulung/services/auth"
 	categoryService "tupulung/services/category"
 	commentService "tupulung/services/comment"
 	eventService "tupulung/services/event"
+	likeService "tupulung/services/like"
 	participantService "tupulung/services/participant"
 	userService "tupulung/services/user"
 
@@ -36,18 +38,24 @@ func main() {
 
 	// User
 	userRepository := userRepository.NewUserRepository(db)
-	userService := userService.NewUserService(userRepository)
+	
+
+	eventRepository := eventRepository.NewEventRepository(db)
+	likeRepository := likeRepository.NewLikeRepository(db)
+	participantRepository := participantRepository.NewParticipantRepository(db)
+
+	userService := userService.NewUserService(userRepository, eventRepository)
 	userHandler := handlers.NewUserHandler(userService)
 	routes.RegisterUserRoute(e, userHandler)
 
-	// Event
-	eventRepository := eventRepository.NewEventRepository(db)
-	eventService := eventService.NewEventService(eventRepository, userRepository)
-	eventHandler := handlers.NewEventHandler(eventService)
-	participantRepository := participantRepository.NewParticipantRepository(db)
+	eventService := eventService.NewEventService(eventRepository, userRepository, likeRepository)
 	participantService := participantService.NewParticipantService(participantRepository, userRepository, eventRepository)
+	likeService := likeService.NewLikeService(likeRepository, userRepository, eventRepository)
+	
+	eventHandler := handlers.NewEventHandler(eventService)
 	participantHandler := handlers.NewParticipantHandler(participantService)
-	routes.RegisterEventRoute(e, eventHandler, participantHandler)
+	likeHandler := handlers.NewLikeHandler(likeService)
+	routes.RegisterEventRoute(e, eventHandler, participantHandler, likeHandler)
 
 	// Authentication
 	authService := authService.NewAuthService(userRepository)

@@ -44,6 +44,7 @@ type EventResponse struct {
 	Category      CategoryResponse `json:"category"`
 	UserID        uint             `json:"user_id"`
 	User          UserResponse     `json:"user"`
+	Likes         uint             `json:"likes"`
 	Participants  []UserResponse   `json:"participants"`
 	CreatedAt     time.Time        `json:"created_at"`
 	UpdatedAt     time.Time        `json:"updated_at"`

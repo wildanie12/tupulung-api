@@ -20,7 +20,6 @@ func NewEventRepository(db *gorm.DB) EventRepository {
 
 func (repo EventRepository) FindAll(limit int, offset int, filters []map[string]string, sorts []map[string]interface{}) ([]entities.Event, error) {
 	events := []entities.Event{}
-
 	builder := repo.db.Preload("User").Preload("Category").Preload("Participants").Limit(limit).Offset(offset)
 	// Where filters
 	for _, filter := range filters {
@@ -93,6 +92,21 @@ func (repo EventRepository) Delete(id int) error {
 	tx := repo.db.Delete(&entities.Event{}, id)
 	if tx.Error != nil {
 		return web.WebError{Code: 500, Message: tx.Error.Error()}
+	}
+	return nil
+}
+
+func (repo EventRepository) DeleteBatch(filters []map[string]string) (error) {
+
+	builder := repo.db
+	// Where filters
+	// for _, filter := range filters {
+	// 	builder.Where(filter["field"]+" "+filter["operator"]+" ?", filter["value"])
+	// 	fmt.Println(filter["field"]+" "+filter["operator"]+" ?")
+	// }
+	tx := builder.Delete(&entities.Event{}, filters[0]["field"]+" "+filters[0]["operator"]+" ?", filters[0]["value"])
+	if tx.Error != nil {
+		return web.WebError{Code: 400, Message: tx.Error.Error()}
 	}
 	return nil
 }

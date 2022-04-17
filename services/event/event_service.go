@@ -12,6 +12,7 @@ import (
 
 	web "tupulung/entities/web"
 	eventRepository "tupulung/repositories/event"
+	likeRepository "tupulung/repositories/like"
 	userRepository "tupulung/repositories/user"
 
 	"github.com/go-playground/validator/v10"
@@ -23,13 +24,15 @@ import (
 type EventService struct {
 	eventRepo eventRepository.EventRepositoryInterface
 	userRepo  userRepository.UserRepositoryInterface
+	likeRepo  likeRepository.LikeRepositoryInterface
 	validate  *validator.Validate
 }
 
-func NewEventService(repository eventRepository.EventRepositoryInterface, userRepository userRepository.UserRepositoryInterface) *EventService {
+func NewEventService(repository eventRepository.EventRepositoryInterface, userRepository userRepository.UserRepositoryInterface, likeRepo likeRepository.LikeRepositoryInterface) *EventService {
 	return &EventService{
 		eventRepo: repository,
 		userRepo:  userRepository,
+		likeRepo:  likeRepo,
 		validate:  validator.New(),
 	}
 }
@@ -45,7 +48,16 @@ func (service EventService) FindAll(limit, page int, filters []map[string]string
 
 	eventsRes := []entities.EventResponse{}
 	events, err := service.eventRepo.FindAll(limit, offset, filters, sorts)
+
 	copier.Copy(&eventsRes, &events)
+	for i, event := range events {
+		count, err := service.likeRepo.CountLikeByEvent(int(event.ID))
+		if err != nil {
+			count = 0
+		}
+		eventsRes[i].Likes = uint(count)
+	}
+
 	return eventsRes, err
 }
 
@@ -82,8 +94,18 @@ func (service EventService) GetPagination(limit, page int, filters []map[string]
 func (service EventService) Find(id int) (entities.EventResponse, error) {
 
 	event, err := service.eventRepo.Find(id)
+	if err != nil {
+		return entities.EventResponse{}, err
+	}
 	eventRes := entities.EventResponse{}
 	copier.Copy(&eventRes, &event)
+
+	// Aggregate event likes
+	count, err := service.likeRepo.CountLikeByEvent(int(event.ID))
+	if err != nil {
+		count = 0
+	}
+	eventRes.Likes = uint(count)
 
 	return eventRes, err
 }
