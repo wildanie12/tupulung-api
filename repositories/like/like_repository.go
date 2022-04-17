@@ -1,4 +1,4 @@
-package participant
+package like
 
 import (
 	"tupulung/entities"
@@ -17,10 +17,9 @@ func NewLikeRepository(db *gorm.DB) LikeRepository {
 	}
 }
 
-
 func (repo LikeRepository) CountLikeByEvent(eventId int) (int64, error) {
-	var count int64;
-	tx := repo.db.Model(&entities.Like{}).Where("event_id = ?", eventId).Count(&count);
+	var count int64
+	tx := repo.db.Model(&entities.Like{}).Where("event_id = ?", eventId).Count(&count)
 	if tx.Error != nil {
 		return -1, web.WebError{Code: 400, Message: tx.Error.Error()}
 	}

@@ -32,7 +32,7 @@ func NewEventService(repository eventRepository.EventRepositoryInterface, userRe
 	return &EventService{
 		eventRepo: repository,
 		userRepo:  userRepository,
-		likeRepo: likeRepo,
+		likeRepo:  likeRepo,
 		validate:  validator.New(),
 	}
 }
@@ -57,7 +57,7 @@ func (service EventService) FindAll(limit, page int, filters []map[string]string
 		}
 		eventsRes[i].Likes = uint(count)
 	}
-	
+
 	return eventsRes, err
 }
 

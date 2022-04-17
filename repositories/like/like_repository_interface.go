@@ -1,4 +1,4 @@
-package participant
+package like
 
 import "tupulung/entities"
 
