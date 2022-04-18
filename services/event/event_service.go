@@ -254,6 +254,8 @@ func (service EventService) Update(eventRequest entities.EventRequest, id int, t
 	copier.CopyWithOption(&event, &eventRequest, copier.Option{IgnoreEmpty: true, DeepCopy: true})
 
 	// repository action
+	event.Participants = nil
+
 	event, err = service.eventRepo.Update(event, id)
 	if err != nil {
 		return entities.EventResponse{}, err
