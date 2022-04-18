@@ -96,7 +96,7 @@ func (repo EventRepository) Delete(id int) error {
 	return nil
 }
 
-func (repo EventRepository) DeleteBatch(filters []map[string]string) (error) {
+func (repo EventRepository) DeleteBatch(filters []map[string]string) error {
 
 	builder := repo.db
 	// Where filters

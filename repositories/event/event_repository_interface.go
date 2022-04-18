@@ -57,5 +57,5 @@ type EventRepositoryInterface interface {
 	 * -------------------------------
 	 * Delete multiple event berdasarkan filter tertentu
 	 */
-	DeleteBatch(filters []map[string]string) (error)
+	DeleteBatch(filters []map[string]string) error
 }
