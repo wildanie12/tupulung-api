@@ -178,7 +178,7 @@ func (service EventService) Create(eventRequest entities.EventRequest, tokenReq 
 	// get event data
 	eventRes, err := service.Find(int(event.ID))
 	if err != nil {
-		return entities.EventResponse{}, web.WebError{Code: 500, Message: "Cannot get newly created event"}
+		return entities.EventResponse{}, web.WebError{Code: 500, Message: "cannot get newly created data: " + err.Error()}
 	}
 
 	return eventRes, nil
