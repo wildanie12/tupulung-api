@@ -169,12 +169,6 @@ components:
                 updated_at:
                     type: string
                     example: '2012-07-28T08:37:12:000+12:00'
-        participant-request:
-            type: object
-            properties:
-                user_id:
-                    type: integer
-                    example: 3
         participant-response:
             type: object
             properties:
@@ -1826,11 +1820,13 @@ paths:
                 - JWTAuth: []
             description: Join as a participants in an event
             summary: Join as a participants in an event
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/participant-request'
+            parameters:
+              - name: Event
+                in: path
+                required: true
+                schema:
+                  type: integer
+                  example: 1
             responses:
                 '200':
                     description: success joining an event
