@@ -1,9 +1,8 @@
 package auth
 
 import (
-	"reflect"
+	"tupulung/deliveries/middleware"
 	userRepository "tupulung/repositories/user"
-	"tupulung/utilities"
 
 	"tupulung/entities"
 	web "tupulung/entities/web"
@@ -29,18 +28,17 @@ func NewAuthService(userRepo userRepository.UserRepositoryInterface) *AuthServic
  * Mencari user berdasarkan ID
  */
 func (service AuthService) Login(authReq entities.AuthRequest) (entities.AuthResponse, error) {
-	
+
 	// Get user by username via repository
 	user, err := service.userRepo.FindBy("email", authReq.Email)
 	if err != nil {
-		return entities.AuthResponse{}, web.WebError{ Code: 401, Message: "Invalid credential" }
+		return entities.AuthResponse{}, web.WebError{Code: 401, Message: "Invalid credential"}
 	}
-	
-	
+
 	// Verify password
 	match := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(authReq.Password))
 	if match != nil {
-		return entities.AuthResponse{}, web.WebError{ Code: 401, Message: "Invalid password" }
+		return entities.AuthResponse{}, web.WebError{Code: 401, Message: "Invalid password"}
 	}
 
 	// Konversi menjadi user response
@@ -48,14 +46,14 @@ func (service AuthService) Login(authReq entities.AuthRequest) (entities.AuthRes
 	copier.Copy(&userRes, &user)
 
 	// Create token
-	token, err := utilities.CreateToken(user)
+	token, err := middleware.CreateToken(user)
 	if err != nil {
-		return entities.AuthResponse{}, web.WebError{ Code: 500, Message: "Error create token" }
+		return entities.AuthResponse{}, web.WebError{Code: 500, Message: "Error create token"}
 	}
 
 	return entities.AuthResponse{
 		Token: token,
-		User: userRes,
+		User:  userRes,
 	}, nil
 }
 
@@ -64,28 +62,18 @@ func (service AuthService) Login(authReq entities.AuthRequest) (entities.AuthRes
  * -------------------------------
  * Mendapatkan userdata yang sedang login
  */
-func (service AuthService) Me(token interface{}) (entities.AuthResponse, error) {
+func (service AuthService) Me(ID int, token interface{}) (interface{}, error) {
 
-	// Translate token to userID
 	userJWT := token.(*jwt.Token)
-	claims := userJWT.Claims.(jwt.MapClaims)
-
-	userIDReflect := reflect.ValueOf(claims).MapIndex(reflect.ValueOf("userID"))
-	if reflect.ValueOf(userIDReflect.Interface()).Kind().String() != "float64" {
-		return entities.AuthResponse{}, web.WebError{ Code: 400, Message: "Invalid token, no userdata present" }
-	}
-
 	// Get userdata via repository
-	user, err := service.userRepo.Find(int(claims["userID"].(float64)))
-
-	// Konversi user ke user response
+	user, err := service.userRepo.Find(ID)
 	userRes := entities.UserResponse{}
 	copier.Copy(&userRes, &user)
 
 	// Bentuk auth response
 	authRes := entities.AuthResponse{
 		Token: userJWT.Raw,
-		User: userRes,
+		User:  userRes,
 	}
 
 	return authRes, err
