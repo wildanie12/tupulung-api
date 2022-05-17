@@ -1,14 +1,11 @@
 package like
 
 import (
-	"reflect"
 	"tupulung/entities"
 	"tupulung/entities/web"
 	eventRepository "tupulung/repositories/event"
 	likeRepository "tupulung/repositories/like"
 	userRepository "tupulung/repositories/user"
-
-	"github.com/golang-jwt/jwt"
 )
 
 type LikeService struct {
@@ -25,19 +22,12 @@ func NewLikeService(repository likeRepository.LikeRepository, userRepository use
 	}
 }
 
-func (service LikeService) Append(token interface{}, eventID int) error {
+func (service LikeService) Append(ID int, eventID int) error {
 	user := entities.User{}
 	event := entities.Event{}
 
-	tokenID := token.(*jwt.Token)
-	claims := tokenID.Claims.(jwt.MapClaims)
-	userIDReflect := reflect.ValueOf(claims).MapIndex(reflect.ValueOf("userID"))
-	if reflect.ValueOf(userIDReflect.Interface()).Kind().String() != "float64" {
-		return web.WebError{Code: 400, Message: "Invalid token, no userdata present"}
-	}
-
 	// get user data
-	user, err := service.userRepo.Find(int(claims["userID"].(float64)))
+	user, err := service.userRepo.Find(ID)
 	if err != nil {
 		return web.WebError{Code: 400, Message: "No user matched with this authenticated user"}
 	}
@@ -53,19 +43,12 @@ func (service LikeService) Append(token interface{}, eventID int) error {
 	return nil
 }
 
-func (service LikeService) Delete(token interface{}, eventID int) error {
+func (service LikeService) Delete(ID int, eventID int) error {
 	user := entities.User{}
 	event := entities.Event{}
 
-	tokenID := token.(*jwt.Token)
-	claims := tokenID.Claims.(jwt.MapClaims)
-	userIDReflect := reflect.ValueOf(claims).MapIndex(reflect.ValueOf("userID"))
-	if reflect.ValueOf(userIDReflect.Interface()).Kind().String() != "float64" {
-		return web.WebError{Code: 400, Message: "Invalid token, no userdata present"}
-	}
-
 	// get user data
-	user, err := service.userRepo.Find(int(claims["userID"].(float64)))
+	user, err := service.userRepo.Find(ID)
 	if err != nil {
 		return web.WebError{Code: 400, Message: "No user matched with this authenticated user"}
 	}
