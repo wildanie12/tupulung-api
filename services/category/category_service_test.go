@@ -175,6 +175,23 @@ func TestCreate(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, expected, actual)
 	})
+	t.Run("repo-fail", func(t *testing.T) {
+
+		sampleRequest := sampleRequestCentral
+
+		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		categoryRepositoryMock.Mock.On("Store").Return(entities.Category{}, web.WebError{})
+
+		Service := categoryService.NewCategoryService(
+			categoryRepositoryMock,
+		)
+		actual, err := Service.Create(sampleRequest)
+
+		expected := entities.CategoryResponse{}
+
+		assert.Error(t, err)
+		assert.Equal(t, expected, actual)
+	})
 	t.Run("validation-fail", func(t *testing.T) {
 		sampleCategory := sampleCategoryCentral
 		sampleRequest := sampleRequestCentral
@@ -221,6 +238,26 @@ func TestUpdate(t *testing.T) {
 		copier.Copy(&expected, &categoryOutput)
 
 		assert.Nil(t, err)
+		assert.Equal(t, expected, actual)
+	})
+	t.Run("repo-fail", func(t *testing.T) {
+		sampleRequest := sampleRequestCentral
+		sampleCategory := sampleCategoryCentral
+
+		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		categoryRepositoryMock.Mock.On("Find", 1).Return(entities.Category{}, web.WebError{})
+
+		categoryOutput := sampleCategory
+		copier.CopyWithOption(&categoryOutput, &sampleRequest, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+		categoryRepositoryMock.Mock.On("Update").Return(categoryOutput, nil)
+
+		Service := categoryService.NewCategoryService(
+			categoryRepositoryMock,
+		)
+		actual, err := Service.Update(sampleRequest, int(sampleCategory.ID))
+		expected := entities.CategoryResponse{}
+
+		assert.Error(t, err)
 		assert.Equal(t, expected, actual)
 	})
 }

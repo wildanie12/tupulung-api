@@ -14,7 +14,7 @@ type LikeService struct {
 	eventRepo eventRepository.EventRepositoryInterface
 }
 
-func NewLikeService(repository likeRepository.LikeRepository, userRepository userRepository.UserRepository, eventRepository eventRepository.EventRepository) *LikeService {
+func NewLikeService(repository likeRepository.LikeRepositoryInterface, userRepository userRepository.UserRepositoryInterface, eventRepository eventRepository.EventRepositoryInterface) *LikeService {
 	return &LikeService{
 		likeRepo:  repository,
 		userRepo:  userRepository,

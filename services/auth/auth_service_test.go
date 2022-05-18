@@ -63,7 +63,7 @@ func TestMe(t *testing.T) {
 		userSample := _userRepository.UserCollection[0]
 		userSample.Password = "$2a$12$iu2L7bKpW4Rpe5yPGt3KPOm5N229fSuMlkHYu5l25dIwgvvW6oQYO" // pass: password
 		userRepositoryMock := _userRepository.NewUserRepositoryMock(&mock.Mock{})
-		userRepositoryMock.Mock.On("Find", 1).Return(userSample, nil)
+		userRepositoryMock.Mock.On("Find").Return(userSample, nil)
 
 		jwt := jwt.Token{
 			Raw:    "",
