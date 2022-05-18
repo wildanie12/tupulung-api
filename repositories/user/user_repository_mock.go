@@ -42,7 +42,7 @@ var UserCollection = []entities.User{
 }
 
 func (repo UserRepositoryMock) Find(id int) (entities.User, error) {
-	args := repo.Mock.Called(id)
+	args := repo.Mock.Called()
 	return args.Get(0).(entities.User), args.Error(1)
 }
 func (repo UserRepositoryMock) GetJoinedEvents(id int) ([]entities.Event, error) {
