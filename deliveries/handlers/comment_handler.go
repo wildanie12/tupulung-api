@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"tupulung/config"
+	"tupulung/deliveries/middleware"
 	"tupulung/entities"
 	"tupulung/entities/web"
 	commentService "tupulung/services/comment"
@@ -23,23 +24,22 @@ func NewCommentHandler(commentService *commentService.CommentService) *CommentHa
 	}
 }
 
-
 /*
- * Find All comment 
+ * Find All comment
  * -------------------------------
  * Mengambil data comment berdasarkan filters dan sorts
  */
 func (handler CommentHandler) Index(c echo.Context) error {
-	
+
 	// Url path parameter & link hateoas
 	eventID, err := strconv.Atoi(c.Param("eventID"))
-	links := map[string]string {}
+	links := map[string]string{}
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, web.ErrorResponse {
+		return c.JSON(http.StatusBadRequest, web.ErrorResponse{
 			Status: "OK",
-			Code: http.StatusBadRequest,
-			Error: "Invalid eventID parameter format",
-			Links: links,
+			Code:   http.StatusBadRequest,
+			Error:  "Invalid eventID parameter format",
+			Links:  links,
 		})
 	}
 
@@ -54,13 +54,12 @@ func (handler CommentHandler) Index(c echo.Context) error {
 	}
 	links["self"] = config.Get().App.BaseURL + "/api/events/" + c.Param("eventID") + "/comments?page=" + strconv.Itoa(page)
 
-
 	// Service call
 	filters := []map[string]string{}
 	filters = append(filters, map[string]string{
-		"field": "event_id",
+		"field":    "event_id",
 		"operator": "=",
-		"value": strconv.Itoa(eventID),
+		"value":    strconv.Itoa(eventID),
 	})
 	commentsRes, err := handler.commentService.FindAll(limit, page, filters, []map[string]interface{}{})
 	if err != nil {
@@ -68,16 +67,16 @@ func (handler CommentHandler) Index(c echo.Context) error {
 			webErr := err.(web.WebError)
 			return c.JSON(webErr.Code, web.ErrorResponse{
 				Status: "ERROR",
-				Code: webErr.Code,
-				Error: webErr.Error(),
-				Links: links,
+				Code:   webErr.Code,
+				Error:  webErr.Error(),
+				Links:  links,
 			})
 		}
 		return c.JSON(http.StatusInternalServerError, web.ErrorResponse{
 			Status: "ERROR",
-			Code: http.StatusInternalServerError,
-			Error: err.Error(),
-			Links: links,
+			Code:   http.StatusInternalServerError,
+			Error:  err.Error(),
+			Links:  links,
 		})
 	}
 
@@ -86,49 +85,49 @@ func (handler CommentHandler) Index(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, web.ErrorResponse{
 			Status: "ERROR",
-			Code: http.StatusInternalServerError,
-			Error: err.Error(),
-			Links: links,
+			Code:   http.StatusInternalServerError,
+			Error:  err.Error(),
+			Links:  links,
 		})
 	}
 	pageUrl := fmt.Sprintf("%s/api/events/%s/comments?page=", config.Get().App.BaseURL, c.Param("eventID"))
 	links["first"] = pageUrl + "1"
 	links["last"] = pageUrl + strconv.Itoa(paginationRes.TotalPages)
 	if paginationRes.Page > 1 {
-		links["previous"] = pageUrl + strconv.Itoa(page - 1)
+		links["previous"] = pageUrl + strconv.Itoa(page-1)
 	}
 	if paginationRes.Page < paginationRes.TotalPages {
-		links["previous"] = pageUrl + strconv.Itoa(page + 1)
+		links["previous"] = pageUrl + strconv.Itoa(page+1)
 	}
 
 	// response
 	return c.JSON(http.StatusOK, web.SuccessListResponse{
-		Status: "OK",
-		Code: http.StatusOK,
-		Error: nil,
-		Links: links,
-		Data: commentsRes,
+		Status:     "OK",
+		Code:       http.StatusOK,
+		Error:      nil,
+		Links:      links,
+		Data:       commentsRes,
 		Pagination: paginationRes,
-	}) 
+	})
 }
 
 /*
- * Create comment 
+ * Create comment
  * -------------------------------
  * Membuat commnet pada event untuk authenticated user
  */
 func (handler CommentHandler) Create(c echo.Context) error {
-	
+
 	// Url path parameter & link hateoas
 	eventID, err := strconv.Atoi(c.Param("eventID"))
-	links := map[string]string {}
+	links := map[string]string{}
 	links["self"] = config.Get().App.BaseURL + "/api/events/" + c.Param("eventID") + "/comments"
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, web.ErrorResponse {
+		return c.JSON(http.StatusBadRequest, web.ErrorResponse{
 			Status: "OK",
-			Code: http.StatusBadRequest,
-			Error: "Invalid eventID parameter format",
-			Links: links,
+			Code:   http.StatusBadRequest,
+			Error:  "Invalid eventID parameter format",
+			Links:  links,
 		})
 	}
 
@@ -138,26 +137,35 @@ func (handler CommentHandler) Create(c echo.Context) error {
 
 	// token
 	token := c.Get("user")
+	userID, err := middleware.ReadToken(token)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, web.ErrorResponse{
+			Code:   http.StatusUnauthorized,
+			Status: "ERROR",
+			Error:  "unauthorized",
+			Links:  links,
+		})
+	}
 
 	// Insert comment
-	commentRes, err := handler.commentService.Create(commentReq, eventID, token)
+	commentRes, err := handler.commentService.Create(commentReq, eventID, userID)
 	if err != nil {
 		if reflect.TypeOf(err).String() == "web.WebError" {
 			webErr := err.(web.WebError)
 			return c.JSON(webErr.Code, web.ErrorResponse{
 				Status: "ERROR",
-				Code: webErr.Code,
-				Error: webErr.Error(),
-				Links: links,
+				Code:   webErr.Code,
+				Error:  webErr.Error(),
+				Links:  links,
 			})
 		} else if reflect.TypeOf(err).String() == "web.ValidationError" {
 			valErr := err.(web.ValidationError)
 			return c.JSON(valErr.Code, web.ValidationErrorResponse{
 				Status: "ERROR",
-				Code: valErr.Code,
-				Error: valErr.Error(),
+				Code:   valErr.Code,
+				Error:  valErr.Error(),
 				Errors: valErr.Errors,
-				Links: links,
+				Links:  links,
 			})
 		}
 	}
@@ -165,9 +173,9 @@ func (handler CommentHandler) Create(c echo.Context) error {
 	// response
 	return c.JSON(200, web.SuccessResponse{
 		Status: "OK",
-		Code: 201,
-		Error: nil,
-		Links: links,
+		Code:   201,
+		Error:  nil,
+		Links:  links,
 		Data: map[string]int{
 			"id": int(commentRes.ID),
 		},
@@ -180,17 +188,17 @@ func (handler CommentHandler) Create(c echo.Context) error {
  * Edit komentar user, hanya pemilik komentar yang dapat mengedit
  */
 func (handler CommentHandler) Update(c echo.Context) error {
-	
+
 	// Url path parameter & link hateoas
 	commentID, err := strconv.Atoi(c.Param("commentID"))
-	links := map[string]string {}
+	links := map[string]string{}
 	links["self"] = config.Get().App.BaseURL + "/api/events/comments/" + c.Param("commentID")
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, web.ErrorResponse {
+		return c.JSON(http.StatusBadRequest, web.ErrorResponse{
 			Status: "OK",
-			Code: http.StatusBadRequest,
-			Error: "Invalid commentID parameter format",
-			Links: links,
+			Code:   http.StatusBadRequest,
+			Error:  "Invalid commentID parameter format",
+			Links:  links,
 		})
 	}
 
@@ -200,17 +208,26 @@ func (handler CommentHandler) Update(c echo.Context) error {
 
 	// token
 	token := c.Get("user")
+	userID, err := middleware.ReadToken(token)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, web.ErrorResponse{
+			Code:   http.StatusUnauthorized,
+			Status: "ERROR",
+			Error:  "unauthorized",
+			Links:  links,
+		})
+	}
 
 	// update comment
-	commentRes, err := handler.commentService.Update(commentReq, commentID, token)
+	commentRes, err := handler.commentService.Update(commentReq, commentID, userID)
 	if err != nil {
 		if reflect.TypeOf(err).String() == "web.WebError" {
 			webErr := err.(web.WebError)
 			return c.JSON(webErr.Code, web.ErrorResponse{
 				Status: "ERROR",
-				Code: webErr.Code,
-				Error: webErr.Error(),
-				Links: links,
+				Code:   webErr.Code,
+				Error:  webErr.Error(),
+				Links:  links,
 			})
 		}
 	}
@@ -218,9 +235,9 @@ func (handler CommentHandler) Update(c echo.Context) error {
 	// response
 	return c.JSON(200, web.SuccessResponse{
 		Status: "OK",
-		Code: 201,
-		Error: nil,
-		Links: links,
+		Code:   201,
+		Error:  nil,
+		Links:  links,
 		Data: map[string]int{
 			"id": int(commentRes.ID),
 		},
@@ -233,33 +250,42 @@ func (handler CommentHandler) Update(c echo.Context) error {
  * Hapus komentar user, hanya pemilik komentar yang dapat mengedit
  */
 func (handler CommentHandler) Delete(c echo.Context) error {
-	
+
 	// Url path parameter & link hateoas
 	commentID, err := strconv.Atoi(c.Param("commentID"))
-	links := map[string]string {}
+	links := map[string]string{}
 	links["self"] = config.Get().App.BaseURL + "/api/events/comments/" + c.Param("commentID")
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, web.ErrorResponse {
+		return c.JSON(http.StatusBadRequest, web.ErrorResponse{
 			Status: "OK",
-			Code: http.StatusBadRequest,
-			Error: "Invalid commentID parameter format",
-			Links: links,
+			Code:   http.StatusBadRequest,
+			Error:  "Invalid commentID parameter format",
+			Links:  links,
 		})
 	}
 
 	// token
 	token := c.Get("user")
+	userID, err := middleware.ReadToken(token)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, web.ErrorResponse{
+			Code:   http.StatusUnauthorized,
+			Status: "ERROR",
+			Error:  "unauthorized",
+			Links:  links,
+		})
+	}
 
 	// update comment
-	err = handler.commentService.Delete(commentID, token)
+	err = handler.commentService.Delete(commentID, userID)
 	if err != nil {
 		if reflect.TypeOf(err).String() == "web.WebError" {
 			webErr := err.(web.WebError)
 			return c.JSON(webErr.Code, web.ErrorResponse{
 				Status: "ERROR",
-				Code: webErr.Code,
-				Error: webErr.Error(),
-				Links: links,
+				Code:   webErr.Code,
+				Error:  webErr.Error(),
+				Links:  links,
 			})
 		}
 	}
@@ -267,9 +293,9 @@ func (handler CommentHandler) Delete(c echo.Context) error {
 	// response
 	return c.JSON(200, web.SuccessResponse{
 		Status: "OK",
-		Code: 201,
-		Error: nil,
-		Links: links,
+		Code:   201,
+		Error:  nil,
+		Links:  links,
 		Data: map[string]int{
 			"id": commentID,
 		},
