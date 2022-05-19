@@ -4,7 +4,7 @@ import (
 	"testing"
 	"tupulung/entities"
 	web "tupulung/entities/web"
-	categoryRepostory "tupulung/repositories/category"
+	categoryRepository "tupulung/repositories/category"
 	categoryService "tupulung/services/category"
 
 	"github.com/jinzhu/copier"
@@ -14,8 +14,8 @@ import (
 
 func TestFindAll(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		categorySample := categoryRepostory.CategoryCollection
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		categorySample := categoryRepository.CategoryCollection
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On(
 			"FindAll",
 			0, 0,
@@ -33,8 +33,8 @@ func TestFindAll(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, categoryRes, data)
 	})
-	t.Run("success", func(t *testing.T) {
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+	t.Run("repo-fail", func(t *testing.T) {
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On(
 			"FindAll",
 			0, 0,
@@ -55,7 +55,7 @@ func TestFindAll(t *testing.T) {
 
 func TestGetPagination(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On("CountAll", []map[string]string{}).Return(20, nil)
 
 		Service := categoryService.NewCategoryService(
@@ -73,7 +73,7 @@ func TestGetPagination(t *testing.T) {
 	})
 
 	t.Run("repo-fail", func(t *testing.T) {
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On("CountAll", []map[string]string{}).Return(0, web.WebError{})
 
 		Service := categoryService.NewCategoryService(
@@ -84,7 +84,7 @@ func TestGetPagination(t *testing.T) {
 		assert.Equal(t, web.Pagination{}, actual)
 	})
 	t.Run("limit-zero", func(t *testing.T) {
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On("CountAll", []map[string]string{}).Return(20, nil)
 
 		Service := categoryService.NewCategoryService(
@@ -101,7 +101,7 @@ func TestGetPagination(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("added-page-on-active-module", func(t *testing.T) {
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On("CountAll", []map[string]string{}).Return(20, nil)
 
 		Service := categoryService.NewCategoryService(
@@ -121,14 +121,14 @@ func TestGetPagination(t *testing.T) {
 
 func TestFind(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		categoryOutput := categoryRepostory.CategoryCollection[0]
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		categoryOutput := categoryRepository.CategoryCollection[0]
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On("Find", 1).Return(categoryOutput, nil)
 
-		orderService := categoryService.NewCategoryService(
+		Service := categoryService.NewCategoryService(
 			categoryRepositoryMock,
 		)
-		actual, err := orderService.Find(int(categoryOutput.ID))
+		actual, err := Service.Find(int(categoryOutput.ID))
 
 		// convert to response
 		expected := entities.CategoryResponse{}
@@ -140,20 +140,20 @@ func TestFind(t *testing.T) {
 	})
 
 	t.Run("error", func(t *testing.T) {
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On("Find", 1).Return(entities.Category{}, web.WebError{Code: 500, Message: "Error"})
 
-		orderService := categoryService.NewCategoryService(
+		Service := categoryService.NewCategoryService(
 			categoryRepositoryMock,
 		)
-		actual, err := orderService.Find(1)
+		actual, err := Service.Find(1)
 		assert.Error(t, err)
 		assert.Equal(t, entities.CategoryResponse{}, actual)
 	})
 }
 
 func TestCreate(t *testing.T) {
-	sampleCategoryCentral := categoryRepostory.CategoryCollection[0]
+	sampleCategoryCentral := categoryRepository.CategoryCollection[0]
 	sampleRequestCentral := entities.CategoryRequest{}
 	copier.Copy(&sampleRequestCentral, &sampleCategoryCentral)
 
@@ -161,7 +161,7 @@ func TestCreate(t *testing.T) {
 		sampleCategory := sampleCategoryCentral
 		sampleRequest := sampleRequestCentral
 
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On("Store").Return(sampleCategory, nil)
 
 		Service := categoryService.NewCategoryService(
@@ -179,7 +179,7 @@ func TestCreate(t *testing.T) {
 
 		sampleRequest := sampleRequestCentral
 
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On("Store").Return(entities.Category{}, web.WebError{})
 
 		Service := categoryService.NewCategoryService(
@@ -197,7 +197,7 @@ func TestCreate(t *testing.T) {
 		sampleRequest := sampleRequestCentral
 
 		sampleRequest.Title = ""
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On("Store").Return(sampleCategory, nil)
 
 		Service := categoryService.NewCategoryService(
@@ -215,7 +215,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	sampleCategoryCentral := categoryRepostory.CategoryCollection[0]
+	sampleCategoryCentral := categoryRepository.CategoryCollection[0]
 	sampleRequestCentral := entities.CategoryRequest{}
 	copier.Copy(&sampleRequestCentral, &sampleCategoryCentral)
 
@@ -223,7 +223,7 @@ func TestUpdate(t *testing.T) {
 		sampleRequest := sampleRequestCentral
 		sampleCategory := sampleCategoryCentral
 
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On("Find", 1).Return(sampleCategory, nil)
 
 		categoryOutput := sampleCategory
@@ -244,7 +244,7 @@ func TestUpdate(t *testing.T) {
 		sampleRequest := sampleRequestCentral
 		sampleCategory := sampleCategoryCentral
 
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On("Find", 1).Return(entities.Category{}, web.WebError{})
 
 		categoryOutput := sampleCategory
@@ -264,8 +264,8 @@ func TestUpdate(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		sampleCategory := categoryRepostory.CategoryCollection[0]
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		sampleCategory := categoryRepository.CategoryCollection[0]
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On("Find", 1).Return(sampleCategory, nil)
 
 		categoryRepositoryMock.Mock.On("Delete", 1).Return(nil)
@@ -277,8 +277,8 @@ func TestDelete(t *testing.T) {
 		assert.Nil(t, err)
 	})
 	t.Run("repo-fail", func(t *testing.T) {
-		sampleCategory := categoryRepostory.CategoryCollection[0]
-		categoryRepositoryMock := categoryRepostory.NewCategoryRepositoryMock(&mock.Mock{})
+		sampleCategory := categoryRepository.CategoryCollection[0]
+		categoryRepositoryMock := categoryRepository.NewCategoryRepositoryMock(&mock.Mock{})
 		categoryRepositoryMock.Mock.On("Find", 1).Return(entities.Category{}, web.WebError{})
 
 		categoryRepositoryMock.Mock.On("Delete", 1).Return(nil)
