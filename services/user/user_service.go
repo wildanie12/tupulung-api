@@ -3,20 +3,18 @@ package user
 import (
 	"mime/multipart"
 	"net/url"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
-	"tupulung/deliveries/helpers"
 	"tupulung/deliveries/middleware"
 	"tupulung/deliveries/validations"
 	entity "tupulung/entities"
 	"tupulung/entities/web"
 	eventRepository "tupulung/repositories/event"
 	userRepository "tupulung/repositories/user"
+	storageProvider "tupulung/utilities/storage"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"golang.org/x/crypto/bcrypt"
@@ -58,18 +56,10 @@ func (service UserService) Find(id int) (entity.UserResponse, error) {
  * -------------------------------
  * Mengambil data event yang sudah di join oleh user
  */
-func (service UserService) GetJoinedEvents(tokenReq interface{}) ([]entity.EventResponse, error) {
-
-	// Translate token
-	token := tokenReq.(*jwt.Token)
-	claims := token.Claims.(jwt.MapClaims)
-	userIDReflect := reflect.ValueOf(claims).MapIndex(reflect.ValueOf("userID")) // Mengambil tipe data dari claims userID
-	if reflect.ValueOf(userIDReflect.Interface()).Kind().String() != "float64" { // Tolak jika bukan float64
-		return []entity.EventResponse{}, web.WebError{Code: 400, Message: "Invalid token, no userdata present"}
-	}
+func (service UserService) GetJoinedEvents(userID int) ([]entity.EventResponse, error) {
 
 	// Mengambil data user dari repository
-	events, err := service.userRepo.GetJoinedEvents(int(claims["userID"].(float64)))
+	events, err := service.userRepo.GetJoinedEvents(userID)
 	if err != nil {
 		return []entity.EventResponse{}, err
 	}
@@ -87,7 +77,7 @@ func (service UserService) GetJoinedEvents(tokenReq interface{}) ([]entity.Event
  * Registrasi User dan mengembalikan token dan auth response
  * untuk auto sign in setelah register
  */
-func (service UserService) Create(userRequest entity.UserRequest, avatar *multipart.FileHeader) (entity.AuthResponse, error) {
+func (service UserService) Create(userRequest entity.UserRequest, avatar *multipart.FileHeader, storageProvider storageProvider.StorageInterface) (entity.AuthResponse, error) {
 
 	// Validation
 	userFiles := []*multipart.FileHeader{}
@@ -119,15 +109,10 @@ func (service UserService) Create(userRequest entity.UserRequest, avatar *multip
 
 	// Upload avatar if exists
 	if avatar != nil {
-		avatarFile, err := avatar.Open()
-		if err != nil {
-			return entity.AuthResponse{}, web.WebError{Code: 500, Message: "Cannot process avatar image"}
-		}
-		defer avatarFile.Close()
 
 		// Upload avatar to S3
 		filename := uuid.New().String() + avatar.Filename
-		avatarURL, err := helpers.UploadFileToS3("avatar/"+filename, avatarFile)
+		avatarURL, err := storageProvider.UploadFromRequest("avatar/"+filename, avatar)
 		if err != nil {
 			return entity.AuthResponse{}, web.WebError{Code: 500, Message: err.Error()}
 		}
@@ -163,7 +148,7 @@ func (service UserService) Create(userRequest entity.UserRequest, avatar *multip
  * -------------------------------
  * Edit data user / edit profile
  */
-func (service UserService) Update(userRequest entity.UserRequest, id int, avatar *multipart.FileHeader, tokenReq interface{}) (entity.UserResponse, error) {
+func (service UserService) Update(userRequest entity.UserRequest, userID int, avatar *multipart.FileHeader, storageProvider storageProvider.StorageInterface) (entity.UserResponse, error) {
 
 	// validation
 	userFiles := []*multipart.FileHeader{}
@@ -175,50 +160,11 @@ func (service UserService) Update(userRequest entity.UserRequest, id int, avatar
 		return entity.UserResponse{}, err
 	}
 
-	// Translate token
-	token := tokenReq.(*jwt.Token)
-	claims := token.Claims.(jwt.MapClaims)
-	userIDReflect := reflect.ValueOf(claims).MapIndex(reflect.ValueOf("userID")) // Mengambil tipe data dari claims userID
-	if reflect.ValueOf(userIDReflect.Interface()).Kind().String() != "float64" { // Tolak jika bukan float64
-		return entity.UserResponse{}, web.WebError{Code: 400, Message: "Invalid token, no userdata present"}
-	}
-
-	// Reject jika id user yg dirubah tidak sama dengan id user token
-	if id != int(claims["userID"].(float64)) {
-		return entity.UserResponse{}, web.WebError{Code: 401, Message: "Unauthorized user"}
-	}
-
 	// Get user by ID via repository
-	user, err := service.userRepo.Find(id)
+	user, err := service.userRepo.Find(userID)
 	if err != nil {
 		return entity.UserResponse{}, web.WebError{Code: 400, Message: "The requested ID doesn't match with any record"}
 	}
-
-	// Avatar
-	if avatar != nil {
-
-		// Delete avatar lama jika ada yang baru
-		if user.Avatar != "" {
-			u, _ := url.Parse(user.Avatar)
-			objectPathS3 := strings.TrimPrefix(u.Path, "/")
-			helpers.DeleteFromS3(objectPathS3)
-		}
-
-		avatarFile, err := avatar.Open()
-		if err != nil {
-			return entity.UserResponse{}, web.WebError{Code: 500, Message: "cannot read avatar image file"}
-		}
-		// Upload avatar to S3
-		filename := uuid.New().String() + avatar.Filename
-		avatarURL, err := helpers.UploadFileToS3("avatar/"+filename, avatarFile)
-		if err != nil {
-			return entity.UserResponse{}, web.WebError{Code: 500, Message: err.Error()}
-		}
-		user.Avatar = avatarURL
-	}
-
-	// Konversi dari request ke domain entity user - mengabaikan nilai kosong pada request
-	copier.CopyWithOption(&user, &userRequest, copier.Option{IgnoreEmpty: true, DeepCopy: true})
 
 	// Hanya hash password jika password juga diganti (tidak kosong)
 	if userRequest.Password != "" {
@@ -229,8 +175,30 @@ func (service UserService) Update(userRequest entity.UserRequest, id int, avatar
 		user.Password = string(hashedPassword)
 	}
 
+	// Avatar
+	if avatar != nil {
+
+		// Delete avatar lama jika ada yang baru
+		if user.Avatar != "" {
+			u, _ := url.Parse(user.Avatar)
+			objectPathS3 := strings.TrimPrefix(u.Path, "/")
+			storageProvider.Delete(objectPathS3)
+		}
+
+		// Upload avatar to S3
+		filename := uuid.New().String() + avatar.Filename
+		avatarURL, err := storageProvider.UploadFromRequest("avatar/"+filename, avatar)
+		if err != nil {
+			return entity.UserResponse{}, web.WebError{Code: 500, Message: err.Error()}
+		}
+		user.Avatar = avatarURL
+	}
+
+	// Konversi dari request ke domain entity user - mengabaikan nilai kosong pada request
+	copier.CopyWithOption(&user, &userRequest, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+
 	// Update via repository
-	user, err = service.userRepo.Update(user, id)
+	user, err = service.userRepo.Update(user, userID)
 
 	// Konversi user domain menjadi user response
 	userRes := entity.UserResponse{}
@@ -245,23 +213,10 @@ func (service UserService) Update(userRequest entity.UserRequest, id int, avatar
  * Delete data user menggunakan ID
  * Hanya usernya sendiri yang dapat melakukan delete
  */
-func (service UserService) Delete(id int, tokenReq interface{}) error {
-
-	// Translate token
-	token := tokenReq.(*jwt.Token)
-	claims := token.Claims.(jwt.MapClaims)
-	userIDReflect := reflect.ValueOf(claims).MapIndex(reflect.ValueOf("userID")) // Mengambil tipe data dari claims userID
-	if reflect.ValueOf(userIDReflect.Interface()).Kind().String() != "float64" { // Tolak jika bukan float64
-		return web.WebError{Code: 400, Message: "Invalid token, no userdata present"}
-	}
-
-	// Reject jika id user yg dirubah tidak sama dengan id user token
-	if id != int(claims["userID"].(float64)) {
-		return web.WebError{Code: 401, Message: "Unauthorized user"}
-	}
+func (service UserService) Delete(userID int, storageProvider storageProvider.StorageInterface) error {
 
 	// Cari user berdasarkan ID via repo
-	user, err := service.userRepo.Find(id)
+	user, err := service.userRepo.Find(userID)
 	if err != nil {
 		return web.WebError{Code: 400, Message: "The requested ID doesn't match with any record"}
 	}
@@ -270,7 +225,7 @@ func (service UserService) Delete(id int, tokenReq interface{}) error {
 	if user.Avatar != "" {
 		u, _ := url.Parse(user.Avatar)
 		objectPathS3 := strings.TrimPrefix(u.Path, "/")
-		helpers.DeleteFromS3(objectPathS3)
+		storageProvider.Delete(objectPathS3)
 	}
 
 	// Delete user event
@@ -284,6 +239,6 @@ func (service UserService) Delete(id int, tokenReq interface{}) error {
 	service.eventRepo.DeleteBatch(filters)
 
 	// Delete via repository
-	err = service.userRepo.Delete(id)
+	err = service.userRepo.Delete(userID)
 	return err
 }

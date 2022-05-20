@@ -19,6 +19,7 @@ import (
 	likeService "tupulung/services/like"
 	participantService "tupulung/services/participant"
 	userService "tupulung/services/user"
+	storageProvider "tupulung/utilities/storage"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -35,23 +36,23 @@ func main() {
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.PATCH, echo.OPTIONS},
 	}))
+	s3 := storageProvider.NewS3()
 
 	// User
 	userRepository := userRepository.NewUserRepository(db)
-	
 
 	eventRepository := eventRepository.NewEventRepository(db)
 	likeRepository := likeRepository.NewLikeRepository(db)
 	participantRepository := participantRepository.NewParticipantRepository(db)
 
 	userService := userService.NewUserService(userRepository, eventRepository)
-	userHandler := handlers.NewUserHandler(userService)
+	userHandler := handlers.NewUserHandler(userService, s3)
 	routes.RegisterUserRoute(e, userHandler)
 
 	eventService := eventService.NewEventService(eventRepository, userRepository, likeRepository)
 	participantService := participantService.NewParticipantService(participantRepository, userRepository, eventRepository)
 	likeService := likeService.NewLikeService(likeRepository, userRepository, eventRepository)
-	
+
 	eventHandler := handlers.NewEventHandler(eventService)
 	participantHandler := handlers.NewParticipantHandler(participantService)
 	likeHandler := handlers.NewLikeHandler(likeService)
