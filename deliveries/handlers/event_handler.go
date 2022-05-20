@@ -1,24 +1,29 @@
 package handlers
 
 import (
+	"net/http"
 	"reflect"
 	"strconv"
 	"tupulung/config"
 	"tupulung/deliveries/helpers"
+	"tupulung/deliveries/middleware"
 	"tupulung/entities"
 	"tupulung/entities/web"
 	eventService "tupulung/services/event"
+	storageProvider "tupulung/utilities/storage"
 
 	"github.com/labstack/echo/v4"
 )
 
 type EventHandler struct {
-	eventService *eventService.EventService
+	eventService    *eventService.EventService
+	storageProvider storageProvider.StorageInterface
 }
 
-func NewEventHandler(service *eventService.EventService) *EventHandler {
+func NewEventHandler(service *eventService.EventService, storageProvider storageProvider.StorageInterface) *EventHandler {
 	return &EventHandler{
-		eventService: service,
+		eventService:    service,
+		storageProvider: storageProvider,
 	}
 }
 
@@ -261,12 +266,21 @@ func (handler EventHandler) Create(c echo.Context) error {
 	links := map[string]string{"self": config.Get().App.BaseURL + "/events"}
 
 	token := c.Get("user")
+	userID, err := middleware.ReadToken(token)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, web.ErrorResponse{
+			Code:   http.StatusUnauthorized,
+			Status: "ERROR",
+			Error:  "unauthorized",
+			Links:  links,
+		})
+	}
 
 	// Read file cover
 	cover, _ := c.FormFile("cover")
 
 	// Insert event
-	eventRes, err := handler.eventService.Create(eventReq, token, cover)
+	eventRes, err := handler.eventService.Create(eventReq, userID, cover, handler.storageProvider)
 	if err != nil {
 		if reflect.TypeOf(err).String() == "web.WebError" {
 			webErr := err.(web.WebError)
@@ -310,12 +324,21 @@ func (handler EventHandler) Update(c echo.Context) error {
 	}
 
 	token := c.Get("user")
+	userID, err := middleware.ReadToken(token)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, web.ErrorResponse{
+			Code:   http.StatusUnauthorized,
+			Status: "ERROR",
+			Error:  "unauthorized",
+			Links:  links,
+		})
+	}
 
 	// Read file cover
 	cover, _ := c.FormFile("cover")
 
 	// Product service call
-	eventRes, err := handler.eventService.Update(eventReq, id, token, cover)
+	eventRes, err := handler.eventService.Update(eventReq, id, userID, cover, handler.storageProvider)
 	if err != nil {
 		if reflect.TypeOf(err).String() == "web.WebError" {
 			webErr := err.(web.WebError)
@@ -358,9 +381,18 @@ func (handler EventHandler) Delete(c echo.Context) error {
 	}
 
 	token := c.Get("user")
+	userID, err := middleware.ReadToken(token)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, web.ErrorResponse{
+			Code:   http.StatusUnauthorized,
+			Status: "ERROR",
+			Error:  "unauthorized",
+			Links:  links,
+		})
+	}
 
 	// call delete on event service
-	err = handler.eventService.Delete(id, token)
+	err = handler.eventService.Delete(id, userID, handler.storageProvider)
 	if err != nil {
 		if reflect.TypeOf(err).String() == "web.WebError" {
 			webErr := err.(web.WebError)
