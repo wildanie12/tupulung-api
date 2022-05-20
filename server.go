@@ -53,7 +53,7 @@ func main() {
 	participantService := participantService.NewParticipantService(participantRepository, userRepository, eventRepository)
 	likeService := likeService.NewLikeService(likeRepository, userRepository, eventRepository)
 
-	eventHandler := handlers.NewEventHandler(eventService)
+	eventHandler := handlers.NewEventHandler(eventService, s3)
 	participantHandler := handlers.NewParticipantHandler(participantService)
 	likeHandler := handlers.NewLikeHandler(likeService)
 	routes.RegisterEventRoute(e, eventHandler, participantHandler, likeHandler)
